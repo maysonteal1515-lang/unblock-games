@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Legend of Zelda: Ocarina of Time</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .hud-text {
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-full bg-slate-950">
+
+  <!-- Header -->
+  <header class="h-11 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-black text-[11px] tracking-wider">N64</span>
+      <span class="font-bold text-white text-sm">The Legend of Zelda: Ocarina of Time</span>
+      <span class="text-slate-600 hidden sm:inline">|</span>
+      <span class="text-slate-400 hidden sm:inline">Inside the Great Deku Tree</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="kbToggleBtn" class="px-2.5 py-1 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 rounded text-xs transition-colors flex items-center gap-1.5 font-semibold">
+        <span>⌨️ Keyboard Keys</span>
+      </button>
+      <button id="soundBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">🔊 Sound: ON</button>
+      <button id="fullscreenBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Interactive PC Keyboard HUD -->
+  <div id="keyboardHud" class="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 z-10 transition-all select-none">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">MOVE LINK:</span>
+        <kbd id="k_w" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">W</kbd>
+        <kbd id="k_a" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">A</kbd>
+        <kbd id="k_s" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">S</kbd>
+        <kbd id="k_d" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">D</kbd>
+        <span class="text-slate-500">or Arrows</span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">SWORD SLASH:</span>
+        <kbd id="k_space" class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-mono font-bold transition-all shadow-xs">SPACE</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_x" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-mono font-bold transition-all shadow-xs">X</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">HYLIAN SHIELD:</span>
+        <kbd id="k_shift" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-blue-400 font-mono font-bold transition-all shadow-xs">SHIFT</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_z" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-blue-400 font-mono font-bold transition-all shadow-xs">Z</kbd>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>PC Keyboard Active</span>
+    </div>
+  </div>
+
+  <!-- Game Area -->
+  <div class="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <!-- Zelda HUD -->
+    <div class="absolute top-4 left-4 flex items-center gap-6 pointer-events-none hud-text">
+      <!-- Hearts -->
+      <div class="flex items-center gap-1.5" id="heartsContainer">
+        <span class="text-2xl text-rose-500">❤️</span>
+        <span class="text-2xl text-rose-500">❤️</span>
+        <span class="text-2xl text-rose-500">❤️</span>
+      </div>
+
+      <!-- Rupees -->
+      <div class="flex items-center gap-2 text-emerald-400 font-black text-lg">
+        <span class="text-xl">💎</span>
+        <span id="rupeeCount">00</span>
+      </div>
+
+      <!-- Small Keys -->
+      <div class="flex items-center gap-1.5 text-amber-300 font-black text-lg">
+        <span class="text-xl">🗝️</span>
+        <span id="keyCount">0</span>
+      </div>
+    </div>
+
+    <!-- Controls hint -->
+    <div class="absolute bottom-4 left-4 bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 pointer-events-none hidden sm:block">
+      <span class="text-emerald-400 font-bold">CONTROLS:</span> <kbd class="text-white font-bold">WASD / Arrows</kbd> Move &nbsp;·&nbsp; <kbd class="text-white font-bold">SPACE / X</kbd> Sword Slash &nbsp;·&nbsp; <kbd class="text-white font-bold">SHIFT / Z</kbd> Shield &nbsp;·&nbsp; <kbd class="text-white font-bold">C</kbd> Slingshot
+    </div>
+
+    <!-- Victory Overlay -->
+    <div id="questOverlay" class="hidden absolute inset-0 bg-black/85 backdrop-blur-xs z-30 flex flex-col items-center justify-center text-center p-6">
+      <div class="text-6xl animate-bounce mb-3">🔺</div>
+      <h2 class="text-3xl font-black text-yellow-400 hud-text mb-2">TRIFORCE OBTAINED!</h2>
+      <p class="text-sm text-slate-200 mb-6 font-semibold max-w-md">
+        You cleansed the Great Deku Tree of darkness, vanquished Queen Gohma, and claimed the Spiritual Stone of the Forest!
+      </p>
+      <button onclick="restartZelda()" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black rounded-xl text-sm shadow-xl transition-transform hover:scale-105">
+        Explore Again
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer
+    let audioEnabled = true;
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function playSfx(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+
+        if (type === 'slash') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, t);
+          osc.frequency.exponentialRampToValueAtTime(120, t + 0.12);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+          osc.start(t);
+          osc.stop(t + 0.12);
+        } else if (type === 'rupee') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1046.50, t); // C6
+          osc.frequency.setValueAtTime(1318.51, t + 0.08); // E6
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        } else if (type === 'chest') {
+          // Classic 4-note puzzle solve
+          const notes = [440, 493.88, 523.25, 587.33, 659.25];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'triangle';
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.2, t + idx * 0.12);
+            g.gain.exponentialRampToValueAtTime(0.01, t + (idx + 1) * 0.15);
+            o.start(t + idx * 0.12);
+            o.stop(t + (idx + 1) * 0.15);
+          });
+        }
+      } catch (e) {}
+    }
+
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('soundBtn').innerText = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    });
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    });
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Link state
+    const link = {
+      x: 100, y: 240,
+      w: 32, h: 36,
+      vx: 0, vy: 0,
+      speed: 180,
+      dir: 'down',
+      health: 3,
+      maxHealth: 3,
+      rupees: 0,
+      keys: 0,
+      isAttacking: false,
+      attackTimer: 0,
+      isShielding: false
+    };
+
+    // Dungeon elements: walls, pots, enemies, chest, door
+    const walls = [
+      { x: 0, y: 0, w: 800, h: 30 },
+      { x: 0, y: 470, w: 800, h: 30 },
+      { x: 0, y: 0, w: 30, h: 500 },
+      { x: 770, y: 0, w: 30, h: 500 },
+      { x: 260, y: 140, w: 280, h: 30 }, // Inner partition
+      { x: 260, y: 320, w: 280, h: 30 }
+    ];
+
+    const enemies = [
+      { x: 350, y: 240, w: 30, h: 30, type: 'stalfos', hp: 2, vx: 60, vy: 0 },
+      { x: 600, y: 100, w: 26, h: 26, type: 'keese', hp: 1, vx: 0, vy: 80 },
+      { x: 620, y: 380, w: 26, h: 26, type: 'keese', hp: 1, vx: 0, vy: -80 }
+    ];
+
+    const pickups = [
+      { x: 180, y: 100, type: 'rupee', collected: false },
+      { x: 180, y: 380, type: 'rupee', collected: false },
+      { x: 420, y: 240, type: 'key', collected: false }
+    ];
+
+    const chest = { x: 700, y: 235, w: 36, h: 30, opened: false };
+
+    const keysState = {};
+
+    function updateBadge(id, active, activeClass = 'bg-cyan-500 text-slate-950') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (active) {
+        el.className = `px-2 py-0.5 rounded ${activeClass} font-mono font-bold shadow-md transform scale-110 transition-transform`;
+      } else {
+        el.className = 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-transform shadow-xs';
+      }
+    }
+
+    // Auto-focus on start & click
+    window.focus();
+    window.addEventListener('load', () => window.focus());
+    document.body.addEventListener('click', () => { window.focus(); initAudio(); });
+    canvas.addEventListener('click', () => { window.focus(); initAudio(); });
+
+    document.getElementById('kbToggleBtn').addEventListener('click', () => {
+      document.getElementById('keyboardHud').classList.toggle('hidden');
+    });
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'z', 'x'].includes(k)) {
+        e.preventDefault();
+      }
+
+      keysState[k] = true;
+      keysState[code] = true;
+      initAudio();
+
+      if (k === 'w' || k === 'arrowup') updateBadge('k_w', true);
+      if (k === 'a' || k === 'arrowleft') updateBadge('k_a', true);
+      if (k === 's' || k === 'arrowdown') updateBadge('k_s', true);
+      if (k === 'd' || k === 'arrowright') updateBadge('k_d', true);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'x') updateBadge('k_x', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'shift' || code.includes('Shift')) updateBadge('k_shift', true, 'bg-blue-400 text-slate-950');
+      if (k === 'z') updateBadge('k_z', true, 'bg-blue-400 text-slate-950');
+
+      if ((e.key === ' ' || k === 'x') && !link.isAttacking) {
+        link.isAttacking = true;
+        link.attackTimer = 0.22;
+        playSfx('slash');
+        checkSwordHit();
+      }
+      if (e.key === 'Shift' || k === 'z') {
+        link.isShielding = true;
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      keysState[k] = false;
+      keysState[code] = false;
+
+      if (k === 'w' || k === 'arrowup') updateBadge('k_w', false);
+      if (k === 'a' || k === 'arrowleft') updateBadge('k_a', false);
+      if (k === 's' || k === 'arrowdown') updateBadge('k_s', false);
+      if (k === 'd' || k === 'arrowright') updateBadge('k_d', false);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', false);
+      if (k === 'x') updateBadge('k_x', false);
+      if (k === 'shift' || code.includes('Shift')) updateBadge('k_shift', false);
+      if (k === 'z') updateBadge('k_z', false);
+
+      if (e.key === 'Shift' || k === 'z') link.isShielding = false;
+    });
+
+    function checkSwordHit() {
+      // Range ahead of Link
+      let hx = link.x;
+      let hy = link.y;
+      if (link.dir === 'up') hy -= 32;
+      if (link.dir === 'down') hy += 32;
+      if (link.dir === 'left') hx -= 32;
+      if (link.dir === 'right') hx += 32;
+
+      enemies.forEach(en => {
+        if (en.hp > 0 && Math.abs(hx - en.x) < 40 && Math.abs(hy - en.y) < 40) {
+          en.hp--;
+          en.vx = -en.vx * 1.5;
+          en.vy = -en.vy * 1.5;
+        }
+      });
+    }
+
+    window.restartZelda = function() {
+      document.getElementById('questOverlay').classList.add('hidden');
+      link.x = 100;
+      link.y = 240;
+      link.health = 3;
+      link.rupees = 0;
+      link.keys = 0;
+      chest.opened = false;
+      pickups.forEach(p => p.collected = false);
+      enemies.forEach(e => { e.hp = e.type === 'stalfos' ? 2 : 1; });
+    };
+
+    let lastTime = performance.now();
+
+    function update(dt) {
+      if (link.isAttacking) {
+        link.attackTimer -= dt;
+        if (link.attackTimer <= 0) link.isAttacking = false;
+      }
+
+      // Movement
+      let mx = 0;
+      let my = 0;
+      if (keysState['w'] || keysState['arrowup']) { my -= 1; link.dir = 'up'; }
+      if (keysState['s'] || keysState['arrowdown']) { my += 1; link.dir = 'down'; }
+      if (keysState['a'] || keysState['arrowleft']) { mx -= 1; link.dir = 'left'; }
+      if (keysState['d'] || keysState['arrowright']) { mx += 1; link.dir = 'right'; }
+
+      const len = Math.sqrt(mx * mx + my * my);
+      if (len > 0) {
+        link.vx = (mx / len) * link.speed;
+        link.vy = (my / len) * link.speed;
+      } else {
+        link.vx = 0;
+        link.vy = 0;
+      }
+
+      // Check wall collision
+      const nextX = link.x + link.vx * dt;
+      const nextY = link.y + link.vy * dt;
+
+      let collX = false;
+      let collY = false;
+      walls.forEach(w => {
+        if (nextX + link.w > w.x && nextX < w.x + w.w && link.y + link.h > w.y && link.y < w.y + w.h) collX = true;
+        if (link.x + link.w > w.x && link.x < w.x + w.w && nextY + link.h > w.y && nextY < w.y + w.h) collY = true;
+      });
+
+      if (!collX) link.x = nextX;
+      if (!collY) link.y = nextY;
+
+      // Update Enemies
+      enemies.forEach(en => {
+        if (en.hp <= 0) return;
+        en.x += en.vx * dt;
+        en.y += en.vy * dt;
+
+        // Bounce inside room
+        if (en.x < 300 || en.x > 720) en.vx *= -1;
+        if (en.y < 60 || en.y > 420) en.vy *= -1;
+
+        // Touch player
+        if (Math.abs(link.x - en.x) < 25 && Math.abs(link.y - en.y) < 25 && !link.isShielding) {
+          link.health = Math.max(0, link.health - 0.02);
+          updateHearts();
+        }
+      });
+
+      // Pickups
+      pickups.forEach(p => {
+        if (!p.collected && Math.abs(link.x - p.x) < 25 && Math.abs(link.y - p.y) < 25) {
+          p.collected = true;
+          if (p.type === 'rupee') {
+            link.rupees += 5;
+            playSfx('rupee');
+            document.getElementById('rupeeCount').innerText = link.rupees.toString().padStart(2, '0');
+          } else if (p.type === 'key') {
+            link.keys += 1;
+            playSfx('chest');
+            document.getElementById('keyCount').innerText = link.keys;
+          }
+        }
+      });
+
+      // Open Master Chest
+      if (!chest.opened && Math.abs(link.x - chest.x) < 35 && Math.abs(link.y - chest.y) < 35) {
+        if (link.keys > 0 || enemies.every(e => e.hp <= 0)) {
+          chest.opened = true;
+          playSfx('chest');
+          setTimeout(() => {
+            document.getElementById('questOverlay').classList.remove('hidden');
+          }, 600);
+        }
+      }
+    }
+
+    function updateHearts() {
+      const full = Math.ceil(link.health);
+      let str = '';
+      for (let i = 0; i < 3; i++) {
+        str += i < full ? '❤️ ' : '🖤 ';
+      }
+      document.getElementById('heartsContainer').innerText = str;
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Floor tiles (Deku Tree wood & moss)
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Decorative Dungeon Floor Grid
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      for (let x = 30; x < canvas.width - 30; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 30);
+        ctx.lineTo(x, canvas.height - 30);
+        ctx.stroke();
+      }
+      for (let y = 30; y < canvas.height - 30; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(canvas.width - 30, y);
+        ctx.stroke();
+      }
+
+      // Walls
+      ctx.fillStyle = '#0f172a';
+      walls.forEach(w => {
+        ctx.fillRect(w.x, w.y, w.w, w.h);
+        ctx.strokeStyle = '#059669';
+        ctx.strokeRect(w.x, w.y, w.w, w.h);
+      });
+
+      // Pickups
+      pickups.forEach(p => {
+        if (p.collected) return;
+        if (p.type === 'rupee') {
+          ctx.fillStyle = '#10b981';
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y - 10);
+          ctx.lineTo(p.x + 8, p.y);
+          ctx.lineTo(p.x, p.y + 10);
+          ctx.lineTo(p.x - 8, p.y);
+          ctx.closePath();
+          ctx.fill();
+        } else if (p.type === 'key') {
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
+        }
+      });
+
+      // Chest
+      ctx.fillStyle = chest.opened ? '#92400e' : '#d97706';
+      ctx.fillRect(chest.x, chest.y, chest.w, chest.h);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(chest.x + 14, chest.y + 10, 8, 10);
+
+      // Enemies
+      enemies.forEach(en => {
+        if (en.hp <= 0) return;
+        ctx.fillStyle = en.type === 'stalfos' ? '#e2e8f0' : '#8b5cf6';
+        ctx.beginPath();
+        ctx.arc(en.x + en.w / 2, en.y + en.h / 2, en.w / 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Link
+      drawLink();
+    }
+
+    function drawLink() {
+      ctx.save();
+      ctx.translate(link.x + link.w / 2, link.y + link.h / 2);
+
+      // Green Tunic
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(-12, -10, 24, 24);
+
+      // Head
+      ctx.fillStyle = '#fcd34d';
+      ctx.beginPath();
+      ctx.arc(0, -18, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Green Cap
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.moveTo(-10, -22);
+      ctx.lineTo(10, -22);
+      ctx.lineTo(0, -32);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sword Slash Effect
+      if (link.isAttacking) {
+        ctx.fillStyle = '#67e8f9';
+        let sx = 0, sy = 0;
+        if (link.dir === 'right') sx = 20;
+        if (link.dir === 'left') sx = -20;
+        if (link.dir === 'down') sy = 20;
+        if (link.dir === 'up') sy = -20;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 16, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Shield
+      if (link.isShielding) {
+        ctx.fillStyle = '#1e40af';
+        ctx.fillRect(8, -6, 8, 18);
+      }
+
+      ctx.restore();
+    }
+
+    function gameLoop(now) {
+      requestAnimationFrame(gameLoop);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      update(dt);
+      render();
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ export const Header = ({
 }) => {
   const categories = [
     { id: 'all', label: 'All Games' },
+    { id: 'N64', label: 'Nintendo 64' },
     { id: 'Arcade', label: 'Arcade' },
     { id: 'Puzzle', label: 'Puzzle' },
     { id: 'Action', label: 'Action' },

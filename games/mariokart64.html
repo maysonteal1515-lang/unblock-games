@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mario Kart 64</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .hud-text {
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+  </style>
+</head>
+<body class="relative flex flex-col h-full bg-slate-950">
+
+  <!-- Top Toolbar -->
+  <header class="h-11 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[11px] tracking-wider">N64</span>
+      <span class="font-bold text-white text-sm">Mario Kart 64</span>
+      <span class="text-slate-600 hidden sm:inline">|</span>
+      <span class="text-slate-400 hidden sm:inline">Luigi Raceway · 150cc</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="kbToggleBtn" class="px-2.5 py-1 bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/60 rounded text-xs transition-colors flex items-center gap-1.5 font-semibold">
+        <span>⌨️ Keyboard Keys</span>
+      </button>
+      <button id="soundBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">🔊 Sound: ON</button>
+      <button id="fullscreenBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Interactive PC Keyboard HUD Bar -->
+  <div id="keyboardHud" class="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 z-10 transition-all select-none">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">GAS:</span>
+        <kbd id="k_w" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">W</kbd>
+        <span class="text-slate-500">or</span>
+        <kbd id="k_up" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">↑</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">STEER:</span>
+        <kbd id="k_a" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">A</kbd>
+        <kbd id="k_d" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">D</kbd>
+        <span class="text-slate-500">or</span>
+        <kbd id="k_left" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">←</kbd>
+        <kbd id="k_right" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">→</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">BRAKE:</span>
+        <kbd id="k_s" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">S</kbd>
+        <span class="text-slate-500">or</span>
+        <kbd id="k_down" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">↓</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">ITEM:</span>
+        <kbd id="k_space" class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-mono font-bold transition-all shadow-xs">SPACE</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">DRIFT:</span>
+        <kbd id="k_shift" class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-mono font-bold transition-all shadow-xs">SHIFT</kbd>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>PC Keyboard Connected</span>
+    </div>
+  </div>
+
+  <!-- Canvas Container -->
+  <div class="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+    <!-- In-Game HUD -->
+    <div class="absolute top-3 left-4 pointer-events-none flex items-center gap-4 text-white font-black hud-text">
+      <!-- Position Badge -->
+      <div class="flex items-baseline gap-1">
+        <span id="posNum" class="text-4xl text-amber-400">1</span>
+        <span id="posSuffix" class="text-xl text-amber-300">ST</span>
+      </div>
+
+      <!-- Item Box -->
+      <div class="w-14 h-14 rounded-xl border-2 border-white/80 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center relative overflow-hidden shadow-lg">
+        <div id="itemDisplay" class="text-3xl">❓</div>
+      </div>
+    </div>
+
+    <div class="absolute top-3 right-4 pointer-events-none text-right font-black hud-text">
+      <!-- Lap Counter -->
+      <div class="text-xl text-yellow-300">
+        LAP <span id="lapDisplay" class="text-2xl text-white">1</span> / 3
+      </div>
+      <!-- Speedometer -->
+      <div class="text-sm text-cyan-400 mt-1 font-mono">
+        <span id="speedDisplay" class="text-lg text-white">0</span> KM/H
+      </div>
+    </div>
+
+    <!-- On-Screen Controls Hint -->
+    <div class="absolute bottom-3 left-4 bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 pointer-events-none hidden sm:block">
+      <span class="text-cyan-400 font-bold">CONTROLS:</span> <kbd class="text-white font-bold">W / ↑</kbd> Gas &nbsp;·&nbsp; <kbd class="text-white font-bold">A / D</kbd> Steer &nbsp;·&nbsp; <kbd class="text-white font-bold">SPACE</kbd> Use Item &nbsp;·&nbsp; <kbd class="text-white font-bold">SHIFT</kbd> Drift
+    </div>
+
+    <!-- Finish / Race Over Overlay -->
+    <div id="finishOverlay" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xs z-30 flex flex-col items-center justify-center text-center p-6">
+      <div class="text-5xl animate-bounce mb-2">🏆</div>
+      <h2 id="finishTitle" class="text-3xl font-black text-amber-400 hud-text mb-2">RACE FINISHED!</h2>
+      <p id="finishDesc" class="text-sm text-slate-200 mb-6 font-semibold">You finished 1st on Luigi Raceway!</p>
+      <button onclick="restartRace()" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black rounded-xl text-sm shadow-xl transition-transform hover:scale-105">
+        Play Again (150cc)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Web Audio Synthesizer
+    let audioEnabled = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, type, duration, vol = 0.2) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function soundItemGet() {
+      playTone(587.33, 'triangle', 0.1);
+      setTimeout(() => playTone(880, 'triangle', 0.15), 100);
+    }
+    function soundUseItem() { playTone(300, 'sawtooth', 0.2, 0.25); }
+    function soundBoost() { playTone(350, 'sine', 0.4, 0.3); }
+
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('soundBtn').innerText = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    });
+
+    // Pseudo-3D Mode-7 Style Track & Kart Engine
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Track definition: list of segments
+    const SEGMENT_LENGTH = 100;
+    const NUM_SEGMENTS = 300;
+    const TRACK_WIDTH = 1400;
+
+    const segments = [];
+    for (let i = 0; i < NUM_SEGMENTS; i++) {
+      let curve = 0;
+      if (i > 30 && i < 80) curve = 2.5; // Turn 1
+      else if (i > 110 && i < 160) curve = -3.2; // Turn 2 hairpin
+      else if (i > 190 && i < 250) curve = 2.0; // Turn 3
+      segments.push({
+        index: i,
+        p1: { world: { z: i * SEGMENT_LENGTH } },
+        p2: { world: { z: (i + 1) * SEGMENT_LENGTH } },
+        curve: curve,
+        color: Math.floor(i / 3) % 2 === 0 ? { grass: '#15803d', rumble: '#ef4444', road: '#475569' } : { grass: '#16a34a', rumble: '#ffffff', road: '#334155' }
+      });
+    }
+
+    const TRACK_TOTAL_LENGTH = NUM_SEGMENTS * SEGMENT_LENGTH;
+
+    // Player State
+    const player = {
+      x: 0,
+      z: 0,
+      speed: 0,
+      maxSpeed: 240,
+      accel: 110,
+      decel: 140,
+      handling: 2.2,
+      drift: 0,
+      lap: 1,
+      totalLaps: 3,
+      item: null,
+      boostTimer: 0,
+      isInvincible: false
+    };
+
+    // Item definitions
+    const ITEMS = [
+      { name: 'Mushroom', icon: '🍄', action: () => { player.boostTimer = 3.0; soundBoost(); } },
+      { name: 'Red Shell', icon: '🔴', action: () => { shootShell(); soundUseItem(); } },
+      { name: 'Green Shell', icon: '🟢', action: () => { shootShell(); soundUseItem(); } },
+      { name: 'Banana', icon: '🍌', action: () => { dropBanana(); soundUseItem(); } },
+      { name: 'Star', icon: '⭐', action: () => { player.isInvincible = true; player.boostTimer = 4.0; soundBoost(); } }
+    ];
+
+    // CPU Racers
+    const cpus = [
+      { name: 'Luigi', color: '#16a34a', x: -0.4, z: 200, speed: 215, lap: 1 },
+      { name: 'Bowser', color: '#ea580c', x: 0.4, z: 400, speed: 225, lap: 1 },
+      { name: 'Peach', color: '#f472b6', x: -0.2, z: 600, speed: 210, lap: 1 },
+      { name: 'Yoshi', color: '#10b981', x: 0.3, z: 800, speed: 220, lap: 1 }
+    ];
+
+    // Track Objects (Item boxes, dropped bananas, shells)
+    const itemBoxes = [
+      { z: 1200, collected: false },
+      { z: 2500, collected: false },
+      { z: 12000, collected: false },
+      { z: 18000, collected: false }
+    ];
+
+    const hazards = []; // bananas & shells
+
+    function shootShell() {
+      hazards.push({ type: 'shell', z: player.z + 100, x: player.x, speed: 450 });
+    }
+
+    function dropBanana() {
+      hazards.push({ type: 'banana', z: player.z - 80, x: player.x, speed: 0 });
+    }
+
+    // Input state & PC Keyboard Handlers
+    const keys = {};
+
+    function updateKeyBadge(id, isPressed, activeBg = 'bg-cyan-500 text-slate-950') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (isPressed) {
+        el.className = `px-2 py-0.5 rounded ${activeBg} font-mono font-black transition-all shadow-md transform scale-110`;
+      } else {
+        el.className = 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs';
+      }
+    }
+
+    // Auto-focus on start & click
+    window.focus();
+    window.addEventListener('load', () => { window.focus(); });
+    document.body.addEventListener('click', () => { window.focus(); initAudio(); });
+    canvas.addEventListener('click', () => { window.focus(); initAudio(); });
+
+    document.getElementById('kbToggleBtn').addEventListener('click', () => {
+      const hud = document.getElementById('keyboardHud');
+      hud.classList.toggle('hidden');
+    });
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      // Prevent window scrolling while gaming on PC
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd'].includes(k)) {
+        e.preventDefault();
+      }
+
+      keys[k] = true;
+      keys[code] = true;
+      initAudio();
+
+      // Visual Keyboard HUD Feedback
+      if (k === 'w') updateKeyBadge('k_w', true);
+      if (k === 'arrowup') updateKeyBadge('k_up', true);
+      if (k === 's') updateKeyBadge('k_s', true);
+      if (k === 'arrowdown') updateKeyBadge('k_down', true);
+      if (k === 'a') updateKeyBadge('k_a', true);
+      if (k === 'arrowleft') updateKeyBadge('k_left', true);
+      if (k === 'd') updateKeyBadge('k_d', true);
+      if (k === 'arrowright') updateKeyBadge('k_right', true);
+      if (k === ' ' || code === 'Space') updateKeyBadge('k_space', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'shift' || code.includes('Shift')) updateKeyBadge('k_shift', true, 'bg-amber-400 text-slate-950');
+
+      if (e.key === ' ' && player.item) {
+        player.item.action();
+        player.item = null;
+        document.getElementById('itemDisplay').innerText = '❓';
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      keys[k] = false;
+      keys[code] = false;
+
+      if (k === 'w') updateKeyBadge('k_w', false);
+      if (k === 'arrowup') updateKeyBadge('k_up', false);
+      if (k === 's') updateKeyBadge('k_s', false);
+      if (k === 'arrowdown') updateKeyBadge('k_down', false);
+      if (k === 'a') updateKeyBadge('k_a', false);
+      if (k === 'arrowleft') updateKeyBadge('k_left', false);
+      if (k === 'd') updateKeyBadge('k_d', false);
+      if (k === 'arrowright') updateKeyBadge('k_right', false);
+      if (k === ' ' || code === 'Space') updateKeyBadge('k_space', false);
+      if (k === 'shift' || code.includes('Shift')) updateKeyBadge('k_shift', false);
+    });
+
+    let raceFinished = false;
+
+    window.restartRace = function() {
+      raceFinished = false;
+      document.getElementById('finishOverlay').classList.add('hidden');
+      player.z = 0;
+      player.x = 0;
+      player.speed = 0;
+      player.lap = 1;
+      player.item = null;
+      document.getElementById('itemDisplay').innerText = '❓';
+      cpus.forEach((c, idx) => {
+        c.z = (idx + 1) * 200;
+        c.lap = 1;
+      });
+    };
+
+    // Main Game Loop
+    let lastTime = performance.now();
+
+    function update(dt) {
+      if (raceFinished) return;
+
+      // Acceleration / Braking
+      const accelerating = keys['w'] || keys['arrowup'];
+      const braking = keys['s'] || keys['arrowdown'];
+      const turningLeft = keys['a'] || keys['arrowleft'];
+      const turningRight = keys['d'] || keys['arrowright'];
+
+      let topSpeed = player.boostTimer > 0 ? 320 : player.maxSpeed;
+
+      if (accelerating) {
+        player.speed = Math.min(topSpeed, player.speed + player.accel * dt);
+      } else if (braking) {
+        player.speed = Math.max(-50, player.speed - player.decel * dt);
+      } else {
+        player.speed = Math.max(0, player.speed - player.decel * 0.5 * dt);
+      }
+
+      // Handling & Turning
+      const speedRatio = player.speed / player.maxSpeed;
+      if (turningLeft) {
+        player.x -= player.handling * speedRatio * dt;
+        player.drift = -1;
+      } else if (turningRight) {
+        player.x += player.handling * speedRatio * dt;
+        player.drift = 1;
+      } else {
+        player.drift = 0;
+      }
+
+      // Off-road penalty
+      if (Math.abs(player.x) > 1.0) {
+        player.speed = Math.min(player.speed, 90);
+      }
+
+      // Keep inside bounds
+      player.x = Math.max(-1.8, Math.min(1.8, player.x));
+
+      // Advance position
+      player.z += player.speed * dt * 20;
+
+      // Lap completion
+      if (player.z >= TRACK_TOTAL_LENGTH) {
+        player.z -= TRACK_TOTAL_LENGTH;
+        player.lap++;
+        if (player.lap > player.totalLaps) {
+          raceFinished = true;
+          document.getElementById('finishOverlay').classList.remove('hidden');
+        } else {
+          document.getElementById('lapDisplay').innerText = player.lap;
+        }
+      }
+
+      // Boost timer countdown
+      if (player.boostTimer > 0) {
+        player.boostTimer -= dt;
+        if (player.boostTimer <= 0) player.isInvincible = false;
+      }
+
+      // Update CPUs
+      cpus.forEach(c => {
+        c.z += c.speed * dt * 20;
+        if (c.z >= TRACK_TOTAL_LENGTH) {
+          c.z -= TRACK_TOTAL_LENGTH;
+          c.lap++;
+        }
+      });
+
+      // Update Hazards (shells, bananas)
+      for (let i = hazards.length - 1; i >= 0; i--) {
+        const h = hazards[i];
+        if (h.type === 'shell') {
+          h.z += h.speed * dt * 20;
+          // Check collision with player
+          if (Math.abs(h.z - player.z) < 60 && Math.abs(h.x - player.x) < 0.3) {
+            player.speed *= 0.2;
+            hazards.splice(i, 1);
+            continue;
+          }
+        } else if (h.type === 'banana') {
+          if (Math.abs(h.z - player.z) < 40 && Math.abs(h.x - player.x) < 0.25) {
+            player.speed *= 0.3;
+            hazards.splice(i, 1);
+            continue;
+          }
+        }
+        if (h.z > player.z + 5000 || h.z < player.z - 2000) {
+          hazards.splice(i, 1);
+        }
+      }
+
+      // Item Box pickup
+      itemBoxes.forEach(ib => {
+        if (!ib.collected && Math.abs((player.z % TRACK_TOTAL_LENGTH) - (ib.z % TRACK_TOTAL_LENGTH)) < 80) {
+          ib.collected = true;
+          soundItemGet();
+          const chosen = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+          player.item = chosen;
+          document.getElementById('itemDisplay').innerText = chosen.icon;
+          setTimeout(() => { ib.collected = false; }, 4000);
+        }
+      });
+
+      // Position Calculation
+      const racers = [{ isPlayer: true, score: player.lap * TRACK_TOTAL_LENGTH + player.z }];
+      cpus.forEach(c => racers.push({ isPlayer: false, score: c.lap * TRACK_TOTAL_LENGTH + c.z }));
+      racers.sort((a, b) => b.score - a.score);
+      const playerPos = racers.findIndex(r => r.isPlayer) + 1;
+      document.getElementById('posNum').innerText = playerPos;
+      const suffixes = ['', 'ST', 'ND', 'RD', 'TH', 'TH'];
+      document.getElementById('posSuffix').innerText = suffixes[playerPos] || 'TH';
+      document.getElementById('speedDisplay').innerText = Math.round(Math.max(0, player.speed));
+    }
+
+    function renderTrack() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Sky gradient (N64 bright blue Mario Kart sky)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.5);
+      skyGrad.addColorStop(0, '#38bdf8');
+      skyGrad.addColorStop(1, '#93c5fd');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.5);
+
+      // Hills on horizon
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(200, 240, 160, Math.PI, 0);
+      ctx.arc(550, 240, 200, Math.PI, 0);
+      ctx.fill();
+
+      // Render 3D Track Segments
+      const baseSegmentIndex = Math.floor(player.z / SEGMENT_LENGTH) % NUM_SEGMENTS;
+      const cameraHeight = 1000;
+      const cameraDepth = 0.84;
+      const drawDistance = 80;
+
+      let dx = -(player.x * TRACK_WIDTH);
+      let x = 0;
+      let maxY = canvas.height;
+
+      for (let n = 0; n < drawDistance; n++) {
+        const segment = segments[(baseSegmentIndex + n) % NUM_SEGMENTS];
+        const loop = (baseSegmentIndex + n >= NUM_SEGMENTS) ? TRACK_TOTAL_LENGTH : 0;
+
+        const p1WorldZ = segment.p1.world.z + loop - player.z;
+        const p2WorldZ = segment.p2.world.z + loop - player.z;
+
+        if (p1WorldZ <= 50) continue;
+
+        // Projection
+        const scale1 = cameraDepth / (p1WorldZ / cameraHeight);
+        const scale2 = cameraDepth / (p2WorldZ / cameraHeight);
+
+        const p1x = Math.round((canvas.width / 2) + (scale1 * (x + dx) * canvas.width / 2));
+        const p1y = Math.round((canvas.height / 2) + (scale1 * cameraHeight * canvas.height / 2));
+        const p1w = Math.round(scale1 * TRACK_WIDTH * canvas.width / 2);
+
+        const p2x = Math.round((canvas.width / 2) + (scale2 * (x + dx + segment.curve) * canvas.width / 2));
+        const p2y = Math.round((canvas.height / 2) + (scale2 * cameraHeight * canvas.height / 2));
+        const p2w = Math.round(scale2 * TRACK_WIDTH * canvas.width / 2);
+
+        x += segment.curve;
+
+        if (p1y >= maxY) continue;
+        maxY = p1y;
+
+        // Draw Grass
+        ctx.fillStyle = segment.color.grass;
+        ctx.fillRect(0, p2y, canvas.width, p1y - p2y);
+
+        // Draw Rumble
+        ctx.fillStyle = segment.color.rumble;
+        drawPolygon(p1x - p1w * 1.15, p1y, p1x - p1w, p1y, p2x - p2w, p2y, p2x - p2w * 1.15, p2y);
+        drawPolygon(p1x + p1w * 1.15, p1y, p1x + p1w, p1y, p2x + p2w, p2y, p2x + p2w * 1.15, p2y);
+
+        // Draw Road
+        ctx.fillStyle = segment.color.road;
+        drawPolygon(p1x - p1w, p1y, p1x + p1w, p1y, p2x + p2w, p2y, p2x - p2w, p2y);
+      }
+
+      // Draw CPU Karts in depth
+      cpus.forEach(c => {
+        const relZ = c.z - player.z;
+        if (relZ > 50 && relZ < 5000) {
+          const scale = cameraDepth / (relZ / cameraHeight);
+          const cx = Math.round((canvas.width / 2) + (scale * (c.x * TRACK_WIDTH + dx) * canvas.width / 2));
+          const cy = Math.round((canvas.height / 2) + (scale * cameraHeight * canvas.height / 2));
+          const size = Math.max(10, Math.min(80, 50 * scale * 2));
+
+          // Draw Kart
+          ctx.fillStyle = c.color;
+          ctx.beginPath();
+          ctx.arc(cx, cy - size * 0.4, size * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(cx - size * 0.6, cy - size * 0.2, size * 1.2, size * 0.3);
+        }
+      });
+
+      // Draw Player Mario Kart in Foreground
+      drawPlayerKart();
+    }
+
+    function drawPolygon(x1, y1, x2, y2, x3, y3, x4, y4) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.lineTo(x4, y4);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawPlayerKart() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height - 40;
+      const steerTilt = player.drift * 8;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+
+      // Kart Tires
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-45, -20, 16, 26);
+      ctx.fillRect(29, -20, 16, 26);
+
+      // Kart Chassis (Red Mario Kart)
+      ctx.fillStyle = player.isInvincible ? `hsl(${Date.now() % 360}, 100%, 50%)` : '#dc2626';
+      ctx.beginPath();
+      ctx.roundRect(-35, -35, 70, 45, 12);
+      ctx.fill();
+
+      // Exhaust Pipes & Engine
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(-22, -10, 10, 16);
+      ctx.fillRect(12, -10, 10, 16);
+
+      // Mario Torso & Hat
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(steerTilt * 0.5, -45, 16, 0, Math.PI * 2); // Cap
+      ctx.fill();
+      ctx.fillStyle = '#fcd34d'; // Head skin
+      ctx.beginPath();
+      ctx.arc(steerTilt * 0.5, -38, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cap Visor
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(-12 + steerTilt * 0.5, -48, 24, 6);
+
+      // Overalls
+      ctx.fillStyle = '#2563eb';
+      ctx.fillRect(-14 + steerTilt * 0.3, -30, 28, 18);
+
+      // Steering Wheel
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(-12 + steerTilt, -26, 24, 5);
+
+      ctx.restore();
+    }
+
+    function gameLoop(now) {
+      requestAnimationFrame(gameLoop);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      update(dt);
+      renderTrack();
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

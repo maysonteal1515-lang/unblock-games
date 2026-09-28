@@ -2,5 +2,7 @@
   "name": "Unblocked Games Portal",
   "description": "Fast, unblocked browser games player with JSON iframe catalog, fullscreen support, and custom game integration.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

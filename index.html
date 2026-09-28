@@ -107,9 +107,9 @@
             <span class="hidden sm:inline">JSON Catalog</span>
           </button>
 
-          <button id="openAddModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-cyan-500/20">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            <span>Add Game</span>
+          <button id="openAddModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 rounded-lg transition-all whitespace-nowrap shadow-sm shadow-cyan-500/20">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>✨ AI Add Game</span>
           </button>
         </div>
       </div>
@@ -135,6 +135,9 @@
           </div>
 
           <div class="flex items-center gap-1.5">
+            <button id="playerFocusBtn" title="Click to Focus Keyboard Controls" class="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-semibold rounded-lg transition-colors shadow-xs">
+              <span>⌨️ Focus Keyboard</span>
+            </button>
             <button id="playerFavBtn" title="Toggle Favorite" class="p-2 rounded-lg text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
               <i data-lucide="star" class="w-4 h-4"></i>
             </button>
@@ -201,13 +204,17 @@
               Every game runs seamlessly inside a responsive sandbox iframe. Store, add, or download the full games catalog through the built-in <code class="text-cyan-300 font-mono text-xs">games.json</code> manager.
             </p>
           </div>
-          <div class="flex items-center gap-3 shrink-0">
+          <div class="flex items-center gap-3 shrink-0 flex-wrap">
             <button id="randomPlayBtn" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl transition-all shadow-sm">
               <i data-lucide="shuffle" class="w-4 h-4 text-cyan-400"></i>
               <span>Random Game</span>
             </button>
-            <button id="heroAddBtn" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-xl transition-all shadow-md shadow-cyan-500/20">
-              <span>+ Custom Iframe</span>
+            <button id="heroAiAddBtn" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 rounded-xl transition-all shadow-lg shadow-cyan-500/25">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>✨ AI Link to Game</span>
+            </button>
+            <button id="heroAddBtn" class="flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 rounded-xl transition-all">
+              <span>+ Manual Iframe</span>
             </button>
           </div>
         </div>
@@ -261,25 +268,160 @@
 
     <!-- Add Game Modal -->
     <div id="addGameModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto hidden">
-      <div class="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 overflow-hidden">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div class="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 overflow-hidden my-8">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <h3 class="text-lg font-bold text-white">Add Game to JSON</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Embed any web game via iframe source or HTML code</p>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>Add Game to Catalog</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">AI ENABLED</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Use AI to read any game link and build code, or embed manually</p>
           </div>
           <button id="closeAddModalBtn" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
-        <form id="addGameForm" class="mt-4 space-y-4">
+
+        <!-- Mode Tabs -->
+        <div class="flex items-center gap-2 mt-4 p-1 bg-slate-950 border border-slate-800 rounded-xl">
+          <button id="tabAiBtn" type="button" class="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg bg-cyan-400 text-slate-950 transition-all shadow-sm">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>⚡ AI Read Link & Build</span>
+          </button>
+          <button id="tabManualBtn" type="button" class="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">
+            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+            <span>🔗 Manual Iframe</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: AI Link-to-Game Generator -->
+        <div id="aiTabContent" class="mt-4 space-y-4">
+          <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/60 to-slate-900/90 border border-cyan-500/30 flex items-start gap-3">
+            <div class="p-2 rounded-lg bg-cyan-500/20 text-cyan-400 shrink-0 mt-0.5">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="text-xs">
+              <div class="font-bold text-white flex items-center gap-1.5">
+                <span>Gemini 3.8 Flash AI Game Builder</span>
+              </div>
+              <p class="text-slate-400 mt-1 leading-relaxed text-[11px]">
+                Paste any game URL, website, or reference link. The AI reads the page, reverse-engineers the game physics, controls, and mechanics, then writes and compiles a 100% playable, unblocked HTML5 game directly into your library!
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+              <span>Game Link or Website URL *</span>
+              <span class="text-[10px] text-cyan-400 font-mono">Any URL or name</span>
+            </label>
+            <div class="relative">
+              <i data-lucide="globe" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+              <input type="text" id="aiGameUrl" placeholder="e.g. https://slopegame.online or https://geometrydash.io" class="w-full pl-9 pr-4 py-2.5 text-xs font-mono bg-slate-950 border border-slate-800 rounded-xl text-cyan-300 focus:outline-none focus:border-cyan-500 placeholder-slate-600 shadow-inner" />
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div>
+            <span class="text-[11px] text-slate-400 font-semibold block mb-1">Click a suggestion to test instantly:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" class="ai-preset-chip px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition-all font-medium flex items-center gap-1" data-url="https://slopegame.online" data-cat="Arcade" data-notes="3D downhill fast sphere racing down narrow slopes dodging neon red blocks">
+                <span>🚀 Slope 3D</span>
+              </button>
+              <button type="button" class="ai-preset-chip px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition-all font-medium flex items-center gap-1" data-url="https://geometrydash.io" data-cat="Arcade" data-notes="Rhythm platformer cube leaping over geometric spike triangles with audio pulses">
+                <span>⚡ Geometry Wave</span>
+              </button>
+              <button type="button" class="ai-preset-chip px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition-all font-medium flex items-center gap-1" data-url="https://freeasteroids.org" data-cat="Action" data-notes="Vector spaceship drifting in zero gravity shooting space asteroids and flying saucers">
+                <span>🛸 Asteroids</span>
+              </button>
+              <button type="button" class="ai-preset-chip px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition-all font-medium flex items-center gap-1" data-url="https://marioarcade.com" data-cat="N64" data-notes="Plumber jumper jumping on brick blocks and collecting gold stars">
+                <span>🍄 Mario Rush</span>
+              </button>
+              <button type="button" class="ai-preset-chip px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition-all font-medium flex items-center gap-1" data-url="https://crossyroad.fun" data-cat="Arcade" data-notes="Hopping pixel chicken crossing 6-lane busy freeway and floating river logs">
+                <span>🐔 Crossy Road</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Options Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Target Category</label>
+              <select id="aiCategory" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500">
+                <option value="Arcade">Arcade</option>
+                <option value="Action">Action</option>
+                <option value="N64">Nintendo 64</option>
+                <option value="Puzzle">Puzzle</option>
+                <option value="Sports">Sports</option>
+                <option value="Classic">Classic</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Custom Notes (Optional)</label>
+              <input type="text" id="aiCustomPrompt" placeholder="e.g. Neon synthwave, boss fights" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500" />
+            </div>
+          </div>
+
+          <!-- Trigger AI button -->
+          <button type="button" id="triggerAiGenerateBtn" class="w-full flex items-center justify-center gap-2 py-3 text-xs font-extrabold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 rounded-xl transition-all shadow-lg shadow-cyan-500/25 active:scale-[0.99]">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>✨ AI Read Link & Build Playable Game</span>
+          </button>
+
+          <!-- Loading Progress State -->
+          <div id="aiLoadingContainer" class="hidden p-5 rounded-xl bg-slate-950 border border-cyan-500/40 text-center space-y-3">
+            <div class="flex items-center justify-center">
+              <div class="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
+            </div>
+            <div>
+              <div id="aiLoadingStatus" class="text-xs font-bold text-cyan-300">Reading link and analyzing mechanics...</div>
+              <div class="text-[11px] text-slate-500 mt-1">Generating physics loop, audio synthesis, and PC controls</div>
+            </div>
+          </div>
+
+          <!-- Error Message Banner -->
+          <div id="aiErrorBanner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-rose-400"></i>
+            <span id="aiErrorMsg">Failed to generate game.</span>
+          </div>
+
+          <!-- Success Preview Card -->
+          <div id="aiSuccessCard" class="hidden p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">🎮</span>
+                <div>
+                  <h4 id="aiSuccessTitle" class="text-sm font-bold text-white">Generated Game</h4>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span id="aiSuccessBadge" class="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/20 px-2 py-0.5 rounded">AI Generated</span>
+                    <span id="aiSuccessCat" class="text-[11px] text-slate-400">Arcade</span>
+                  </div>
+                </div>
+              </div>
+              <button id="aiLaunchGameBtn" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-105 shrink-0">
+                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                <span>Play Now</span>
+              </button>
+            </div>
+            <div id="aiSuccessDesc" class="text-xs text-slate-300 leading-relaxed"></div>
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800 text-[11px]">
+              <span class="text-cyan-400 font-bold block mb-1">🎮 CONTROLS INCLUDED:</span>
+              <div id="aiSuccessControls" class="text-slate-300 space-y-0.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Manual Iframe Embed Form -->
+        <form id="addGameForm" class="mt-4 space-y-4 hidden">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Game Title *</label>
-            <input type="text" id="addTitle" required placeholder="e.g. Super Hexagon, Slope" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500" />
+            <input type="text" id="addTitle" placeholder="e.g. Super Hexagon, Slope" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
               <select id="addCategory" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500">
+                <option value="N64">Nintendo 64</option>
                 <option value="Arcade">Arcade</option>
                 <option value="Puzzle">Puzzle</option>
                 <option value="Action">Action</option>
@@ -298,7 +440,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Iframe URL or &lt;iframe&gt; code *</label>
-            <input type="text" id="addUrl" required placeholder="./games/yourgame.html or https://..." class="w-full px-3 py-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500" />
+            <input type="text" id="addUrl" placeholder="./games/yourgame.html or https://..." class="w-full px-3 py-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Short Description</label>
@@ -361,6 +503,90 @@
     <script>
       // Embedded initial catalog as robust fallback
       const DEFAULT_GAMES = [
+        {
+          id: "sm64-3d",
+          title: "Super Mario 64 (3D Web Edition)",
+          category: "N64",
+          description: "Interactive 3D WebGL edition of Super Mario 64. Explore Peach's Castle courtyard, double jump, triple somersault, and gather the 8 Red Coins!",
+          iframeUrl: "./games/sm64.html",
+          aspectRatio: "16:9",
+          badge: "3D Classic",
+          accentColor: "#ef4444",
+          controls: ["WASD / Arrow Keys to run", "Space / X to Jump (Double & Triple Jump)", "Z / Shift to Ground Pound", "C / Enter to Punch", "Drag mouse / Q & E to rotate camera"],
+          tags: ["N64", "Mario", "3D", "Platformer", "Nintendo"]
+        },
+        {
+          id: "n64-mariokart",
+          title: "Mario Kart 64",
+          category: "N64",
+          description: "Drift across Luigi Raceway, dodge red spiny shells, and race with Mario, Luigi, Bowser, Peach, and Yoshi.",
+          iframeUrl: "./games/mariokart64.html",
+          aspectRatio: "16:9",
+          badge: "N64 Racing",
+          accentColor: "#f97316",
+          controls: ["W / Up: Accelerate", "S / Down: Brake", "A / D: Steer", "Space: Use Item", "Shift: Power Slide / Drift"],
+          tags: ["N64", "Racing", "Kart", "Multiplayer", "Nintendo"]
+        },
+        {
+          id: "n64-smash",
+          title: "Super Smash Bros",
+          category: "N64",
+          description: "The original 4-player brawler where Nintendo icons clash! Battle Mario vs Link with damage percentages, smash attacks, and blast zones.",
+          iframeUrl: "./games/smash.html",
+          aspectRatio: "16:9",
+          badge: "N64 Brawler",
+          accentColor: "#ec4899",
+          controls: ["A / D: Move", "W / Space: Double Jump", "J / Z: Jab Attack", "K / X: Smash Attack", "L / C: Fireball Projectile"],
+          tags: ["N64", "Fighting", "Smash", "Brawler", "Nintendo"]
+        },
+        {
+          id: "n64-zelda",
+          title: "The Legend of Zelda: Ocarina of Time",
+          category: "N64",
+          description: "Explore the Great Deku Tree as Link! Slay Stalfos, gather Rupees and Dungeon Keys, and claim the Sacred Spiritual Stone.",
+          iframeUrl: "./games/zelda.html",
+          aspectRatio: "16:10",
+          badge: "Masterpiece",
+          accentColor: "#10b981",
+          controls: ["WASD / Arrows: Move Link", "Space / X: Master Sword Slash", "Shift / Z: Hylian Shield", "Defeat enemies to unlock the Master Chest!"],
+          tags: ["N64", "Zelda", "RPG", "Adventure", "Fantasy"]
+        },
+        {
+          id: "n64-starfox",
+          title: "Star Fox 64",
+          category: "N64",
+          description: "Do a barrel roll! Pilot the Arwing starfighter through Corneria space combat, fire dual plasma lasers, and launch Nova Bombs.",
+          iframeUrl: "./games/starfox.html",
+          aspectRatio: "16:9",
+          badge: "N64 Shooter",
+          accentColor: "#06b6d4",
+          controls: ["WASD / Arrows: Fly Arwing", "Space / X: Dual Lasers", "Q / E: Barrel Roll (Deflects Lasers!)", "Shift / Z: Smart Nova Bomb"],
+          tags: ["N64", "Sci-Fi", "Shooter", "Fox", "Space"]
+        },
+        {
+          id: "n64-goldeneye",
+          title: "GoldenEye 007",
+          category: "N64",
+          description: "Infiltrate the Soviet Chemical Warfare Facility with James Bond. Wield the Silenced PP7, eliminate sentries, and complete your MI6 mission.",
+          iframeUrl: "./games/goldeneye.html",
+          aspectRatio: "16:10",
+          badge: "N64 Stealth",
+          accentColor: "#64748b",
+          controls: ["WASD: Move & Strafe", "Mouse / Arrows: Aim Crosshairs", "Click / Space: Fire Silenced PP7", "R: Reload Magazine"],
+          tags: ["N64", "FPS", "Shooter", "Stealth", "Action"]
+        },
+        {
+          id: "n64-player",
+          title: "Universal N64 ROM Emulator",
+          category: "N64",
+          description: "High-performance Nintendo 64 WebAssembly Emulator. Drag & drop or upload any .z64 or .n64 game file to play instantly with full controller mapping!",
+          iframeUrl: "./games/n64-player.html",
+          aspectRatio: "4:3",
+          badge: "Universal Runner",
+          accentColor: "#8b5cf6",
+          controls: ["Drag & drop any .z64/.n64 file", "Gamepad & Keyboard mapping", "Save states supported"],
+          tags: ["N64", "Emulator", "ROMs", "Custom"]
+        },
         {
           id: "2048",
           title: "2048",
@@ -494,9 +720,9 @@
       function initData() {
         try {
           const savedFavs = localStorage.getItem('unblock_favorites');
-          favorites = savedFavs ? JSON.parse(savedFavs) : ['2048', 'snake'];
+          favorites = savedFavs ? JSON.parse(savedFavs) : ['sm64-3d', 'n64-mariokart', '2048'];
         } catch (e) {
-          favorites = ['2048', 'snake'];
+          favorites = ['sm64-3d', 'n64-mariokart', '2048'];
         }
 
         try {
@@ -504,7 +730,16 @@
           if (savedCatalog) {
             const parsed = JSON.parse(savedCatalog);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              games = parsed;
+              const existingIds = new Set(parsed.map(g => g.id));
+              const missingDefaults = DEFAULT_GAMES.filter(g => !existingIds.has(g.id));
+              if (missingDefaults.length > 0) {
+                // Merge all default games with any user custom games
+                const customGames = parsed.filter(g => g.isCustom);
+                games = [...DEFAULT_GAMES, ...customGames];
+                saveCatalog();
+              } else {
+                games = parsed;
+              }
               render();
               return;
             }
@@ -516,10 +751,13 @@
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data) && data.length > 0) {
-              games = data;
+              const existingIds = new Set(data.map(g => g.id));
+              const customGames = games.filter(g => g.isCustom);
+              games = [...data, ...customGames.filter(cg => !existingIds.has(cg.id))];
             } else {
               games = DEFAULT_GAMES;
             }
+            saveCatalog();
             render();
           })
           .catch(() => {
@@ -541,6 +779,7 @@
         const nav = document.getElementById('navTabs');
         const categories = [
           { id: 'all', label: 'All Games' },
+          { id: 'N64', label: 'Nintendo 64' },
           { id: 'Arcade', label: 'Arcade' },
           { id: 'Puzzle', label: 'Puzzle' },
           { id: 'Action', label: 'Action' },
@@ -675,6 +914,18 @@
         const iframe = document.getElementById('gameIframe');
         iframe.src = resolveUrl(activeGame.iframeUrl);
 
+        function focusIframe() {
+          try {
+            iframe.focus();
+            if (iframe.contentWindow) iframe.contentWindow.focus();
+          } catch (e) {}
+        }
+
+        iframe.onload = () => {
+          setTimeout(focusIframe, 150);
+        };
+        wrapper.onclick = focusIframe;
+
         // Controls
         const controlsDiv = document.getElementById('aboutGameControls');
         if (activeGame.controls && activeGame.controls.length > 0) {
@@ -793,6 +1044,16 @@
         renderPlayer();
       });
 
+      document.getElementById('playerFocusBtn').addEventListener('click', () => {
+        const iframe = document.getElementById('gameIframe');
+        if (iframe) {
+          try {
+            iframe.focus();
+            if (iframe.contentWindow) iframe.contentWindow.focus();
+          } catch (e) {}
+        }
+      });
+
       document.getElementById('playerFavBtn').addEventListener('click', () => {
         if (activeGame) toggleFavorite(activeGame.id);
       });
@@ -827,33 +1088,255 @@
         renderGrid();
       });
 
-      // Add Game Modal
+      // Add Game Modal & Tabs
       const addModal = document.getElementById('addGameModal');
-      function openAddModal() { addModal.classList.remove('hidden'); }
-      function closeAddModal() { addModal.classList.add('hidden'); }
+      const tabAiBtn = document.getElementById('tabAiBtn');
+      const tabManualBtn = document.getElementById('tabManualBtn');
+      const aiTabContent = document.getElementById('aiTabContent');
+      const addGameForm = document.getElementById('addGameForm');
 
-      document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
-      document.getElementById('heroAddBtn').addEventListener('click', openAddModal);
+      function openAddModal(defaultTab = 'ai') {
+        addModal.classList.remove('hidden');
+        switchAddTab(defaultTab);
+      }
+      function closeAddModal() {
+        addModal.classList.add('hidden');
+        // Reset states
+        const loadingBox = document.getElementById('aiLoadingContainer') || document.getElementById('aiGenerateStatus');
+        const errorAlert = document.getElementById('aiErrorBanner') || document.getElementById('aiErrorAlert');
+        const successAlert = document.getElementById('aiSuccessCard') || document.getElementById('aiSuccessAlert');
+        if (loadingBox) loadingBox.classList.add('hidden');
+        if (errorAlert) errorAlert.classList.add('hidden');
+        if (successAlert) successAlert.classList.add('hidden');
+      }
+
+      function switchAddTab(tab) {
+        const formEl = document.getElementById('addGameForm');
+        if (tab === 'ai') {
+          if (tabAiBtn) tabAiBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg bg-cyan-400 text-slate-950 transition-all shadow-sm';
+          if (tabManualBtn) tabManualBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all';
+          if (aiTabContent) aiTabContent.classList.remove('hidden');
+          if (formEl) formEl.classList.add('hidden');
+        } else {
+          if (tabManualBtn) tabManualBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg bg-cyan-400 text-slate-950 transition-all shadow-sm';
+          if (tabAiBtn) tabAiBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all';
+          if (formEl) formEl.classList.remove('hidden');
+          if (aiTabContent) aiTabContent.classList.add('hidden');
+        }
+      }
+
+      if (tabAiBtn) tabAiBtn.addEventListener('click', () => switchAddTab('ai'));
+      if (tabManualBtn) tabManualBtn.addEventListener('click', () => switchAddTab('manual'));
+
+      document.getElementById('openAddModalBtn').addEventListener('click', () => openAddModal('ai'));
+      const heroAddBtn = document.getElementById('heroAddBtn');
+      if (heroAddBtn) heroAddBtn.addEventListener('click', () => openAddModal('manual'));
+      const heroAiAddBtn = document.getElementById('heroAiAddBtn');
+      if (heroAiAddBtn) heroAiAddBtn.addEventListener('click', () => openAddModal('ai'));
+
       document.getElementById('closeAddModalBtn').addEventListener('click', closeAddModal);
-      document.getElementById('cancelAddBtn').addEventListener('click', closeAddModal);
+      const cancelAddBtn = document.getElementById('cancelAddBtn');
+      if (cancelAddBtn) cancelAddBtn.addEventListener('click', closeAddModal);
 
+      // Preset chips for AI game creation
+      document.querySelectorAll('.ai-preset-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url') || '';
+          const notes = btn.getAttribute('data-notes') || btn.getAttribute('data-prompt') || '';
+          const cat = btn.getAttribute('data-cat') || 'Arcade';
+          const aiUrlInput = document.getElementById('aiGameUrl');
+          const aiPromptInput = document.getElementById('aiCustomPrompt') || document.getElementById('aiUserPrompt');
+          const aiCatSelect = document.getElementById('aiCategory');
+          if (aiUrlInput && url) aiUrlInput.value = url;
+          if (aiPromptInput && notes) aiPromptInput.value = notes;
+          if (aiCatSelect && cat) aiCatSelect.value = cat;
+          if (aiUrlInput) aiUrlInput.focus();
+        });
+      });
+
+      // AI Generation Execution
+      let lastGeneratedGame = null;
+      let aiStepTimer = null;
+
+      async function executeAiGameGeneration() {
+        const aiUrlInput = document.getElementById('aiGameUrl');
+        const aiPromptInput = document.getElementById('aiCustomPrompt') || document.getElementById('aiUserPrompt');
+        const aiCatSelect = document.getElementById('aiCategory');
+        const aiGenBtn = document.getElementById('triggerAiGenerateBtn') || document.getElementById('aiGenerateBtn');
+        const statusBox = document.getElementById('aiLoadingContainer') || document.getElementById('aiGenerateStatus');
+        const statusStep = document.getElementById('aiLoadingStatus') || document.getElementById('aiStatusStep');
+        const errorAlert = document.getElementById('aiErrorBanner') || document.getElementById('aiErrorAlert');
+        const errorMessage = document.getElementById('aiErrorMsg') || document.getElementById('aiErrorMessage');
+        const successAlert = document.getElementById('aiSuccessCard') || document.getElementById('aiSuccessAlert');
+
+        let rawUrl = aiUrlInput ? aiUrlInput.value.trim() : '';
+        const userPrompt = aiPromptInput ? aiPromptInput.value.trim() : '';
+        const preferredCategory = aiCatSelect ? aiCatSelect.value : 'Arcade';
+
+        // Check if user pasted an <iframe> snippet into the AI URL input
+        if (rawUrl.includes('<iframe')) {
+          const srcMatch = rawUrl.match(/src=["'](.*?)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            rawUrl = srcMatch[1];
+          }
+        }
+
+        if (!rawUrl && !userPrompt) {
+          if (aiUrlInput) {
+            aiUrlInput.focus();
+            aiUrlInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+            setTimeout(() => {
+              aiUrlInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+            }, 2000);
+          }
+          return;
+        }
+
+        // Show loading state
+        if (errorAlert) errorAlert.classList.add('hidden');
+        if (successAlert) successAlert.classList.add('hidden');
+        if (statusBox) statusBox.classList.remove('hidden');
+        if (aiGenBtn) {
+          aiGenBtn.disabled = true;
+          aiGenBtn.classList.add('opacity-60', 'cursor-not-allowed');
+        }
+
+        const steps = [
+          'Analyzing game concept and mechanics...',
+          'Synthesizing standalone HTML5/WebGL game engine...',
+          'Generating PC keyboard controls & audio synthesizer...',
+          'Finalizing unblocked standalone build...'
+        ];
+        let stepIdx = 0;
+        if (statusStep) statusStep.innerText = steps[0];
+        clearInterval(aiStepTimer);
+        aiStepTimer = setInterval(() => {
+          stepIdx = (stepIdx + 1) % steps.length;
+          if (statusStep) statusStep.innerText = steps[stepIdx];
+        }, 1800);
+
+        try {
+          const res = await fetch('/api/ai-generate-game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: rawUrl,
+              prompt: userPrompt,
+              preferredCategory: preferredCategory
+            })
+          });
+
+          clearInterval(aiStepTimer);
+
+          // Safe JSON parsing to prevent "Unexpected token < is not valid JSON"
+          const contentType = res.headers.get('content-type') || '';
+          let data;
+          if (contentType.includes('application/json')) {
+            data = await res.json();
+          } else {
+            const rawText = await res.text();
+            throw new Error('Server returned an invalid response format.');
+          }
+
+          if (!res.ok || !data.success || !data.game) {
+            throw new Error(data.error || 'Failed to generate game. Please try again.');
+          }
+
+          lastGeneratedGame = data.game;
+
+          // Merge into games array
+          games.unshift(data.game);
+          saveCatalog();
+          render();
+
+          // Display success alert
+          if (statusBox) statusBox.classList.add('hidden');
+          const titleEl = document.getElementById('aiSuccessTitle');
+          const descEl = document.getElementById('aiSuccessDesc');
+          const catEl = document.getElementById('aiSuccessCat');
+          const controlsEl = document.getElementById('aiSuccessControls');
+
+          if (titleEl) titleEl.innerText = data.game.title;
+          if (descEl) descEl.innerText = data.game.description;
+          if (catEl) catEl.innerText = data.game.category || preferredCategory;
+          if (controlsEl && Array.isArray(data.game.controls)) {
+            controlsEl.innerHTML = data.game.controls.map(c => `<div>• ${c}</div>`).join('');
+          }
+          if (successAlert) successAlert.classList.remove('hidden');
+
+          // Wire up Launch button
+          const playBtn = document.getElementById('aiLaunchGameBtn') || document.getElementById('aiPlayCreatedBtn');
+          if (playBtn) {
+            playBtn.onclick = () => {
+              closeAddModal();
+              playGame(data.game.id);
+            };
+          }
+
+          if (aiGenBtn) {
+            aiGenBtn.disabled = false;
+            aiGenBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+          }
+
+        } catch (err) {
+          clearInterval(aiStepTimer);
+          if (statusBox) statusBox.classList.add('hidden');
+          if (errorMessage) errorMessage.innerText = err.message || 'An error occurred while building the game.';
+          if (errorAlert) errorAlert.classList.remove('hidden');
+          if (aiGenBtn) {
+            aiGenBtn.disabled = false;
+            aiGenBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+          }
+        }
+      }
+
+      const triggerAiGenerateBtn = document.getElementById('triggerAiGenerateBtn');
+      if (triggerAiGenerateBtn) triggerAiGenerateBtn.addEventListener('click', executeAiGameGeneration);
+      const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+      if (aiGenerateBtn) aiGenerateBtn.addEventListener('click', executeAiGameGeneration);
+
+      // Manual Add Game Form Submission
       document.getElementById('addGameForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const rawUrl = document.getElementById('addUrl').value.trim();
         let finalUrl = rawUrl;
-        if (rawUrl.startsWith('<iframe')) {
-          const match = rawUrl.match(/src=["'](.*?)["']/);
-          if (match && match[1]) finalUrl = match[1];
+        let inferredTitle = '';
+
+        // If user pasted an <iframe> snippet (e.g. <iframe id="gameIframe" src="..."></iframe>)
+        if (rawUrl.includes('<iframe')) {
+          const srcMatch = rawUrl.match(/src=["'](.*?)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            finalUrl = srcMatch[1];
+          }
+          const titleMatch = rawUrl.match(/title=["'](.*?)["']/i);
+          if (titleMatch && titleMatch[1]) {
+            inferredTitle = titleMatch[1];
+          }
+        }
+
+        let enteredTitle = document.getElementById('addTitle').value.trim();
+        if (!enteredTitle) {
+          if (inferredTitle) {
+            enteredTitle = inferredTitle;
+          } else {
+            try {
+              const u = new URL(finalUrl);
+              const host = u.hostname.replace('www.', '').split('.')[0];
+              enteredTitle = host.charAt(0).toUpperCase() + host.slice(1);
+            } catch {
+              enteredTitle = 'Custom Game ' + (games.length + 1);
+            }
+          }
         }
 
         const newGame = {
           id: 'custom-' + Date.now(),
-          title: document.getElementById('addTitle').value.trim(),
-          category: document.getElementById('addCategory').value,
+          title: enteredTitle,
+          category: document.getElementById('addCategory').value || 'Arcade',
           description: document.getElementById('addDesc').value.trim() || 'Custom added iframe game.',
           iframeUrl: finalUrl,
-          aspectRatio: document.getElementById('addAspect').value,
-          controls: ['Mouse / Keyboard'],
+          aspectRatio: document.getElementById('addAspect').value || '16:9',
+          controls: ['Mouse / Keyboard Controls'],
           accentColor: '#38bdf8',
           isCustom: true
         };
@@ -864,7 +1347,7 @@
         playGame(newGame.id);
       });
 
-      // JSON Modal
+      // JSON Modal & Smart Importer
       const jsonModal = document.getElementById('jsonModal');
       const jsonEditor = document.getElementById('jsonEditor');
       const jsonStatus = document.getElementById('jsonStatus');
@@ -910,18 +1393,64 @@
         render();
       });
 
+      // Smart Apply: Detects if user pasted raw JSON OR an <iframe> tag OR a single game object
       document.getElementById('applyJsonBtn').addEventListener('click', () => {
+        const inputVal = jsonEditor.value.trim();
+
+        // 1. If user pasted an <iframe> snippet (e.g. <iframe id="gameIframe" src="..."></iframe>)
+        if (inputVal.includes('<iframe')) {
+          const srcMatch = inputVal.match(/src=["'](.*?)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            const src = srcMatch[1];
+            const titleMatch = inputVal.match(/title=["'](.*?)["']/i);
+            const title = titleMatch?.[1] || 'Custom Iframe Game';
+            const newGame = {
+              id: 'custom-' + Date.now(),
+              title: title,
+              category: 'Arcade',
+              description: 'Imported from iframe snippet.',
+              iframeUrl: src,
+              aspectRatio: '16:9',
+              controls: ['Mouse / Keyboard'],
+              accentColor: '#38bdf8',
+              isCustom: true
+            };
+            games.unshift(newGame);
+            saveCatalog();
+            jsonEditor.value = JSON.stringify(games, null, 2);
+            jsonStatus.innerText = `✨ Detected <iframe> code! Converted and added "${title}" to your games catalog!`;
+            jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            jsonStatus.classList.remove('hidden');
+            render();
+            return;
+          }
+        }
+
+        // 2. Standard JSON Array or Single Game Object
         try {
-          const parsed = JSON.parse(jsonEditor.value);
-          if (!Array.isArray(parsed)) throw new Error('Root must be an array of game objects.');
-          games = parsed;
+          const parsed = JSON.parse(inputVal);
+          if (Array.isArray(parsed)) {
+            games = parsed;
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            // User pasted a single game object { title: "...", iframeUrl: "..." }
+            if (parsed.title || parsed.iframeUrl) {
+              if (!parsed.id) parsed.id = 'custom-' + Date.now();
+              games.unshift(parsed);
+              jsonEditor.value = JSON.stringify(games, null, 2);
+            } else {
+              throw new Error('JSON object must include title or iframeUrl properties.');
+            }
+          } else {
+            throw new Error('Catalog must be an array of game objects or an <iframe> code.');
+          }
+
           saveCatalog();
           jsonStatus.innerText = 'Catalog updated successfully!';
           jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
           jsonStatus.classList.remove('hidden');
           render();
         } catch (err) {
-          jsonStatus.innerText = err.message || 'Invalid JSON syntax.';
+          jsonStatus.innerText = err.message || 'Invalid JSON syntax. You can paste a JSON array or an <iframe> code.';
           jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-rose-500/10 text-rose-400 border border-rose-500/30';
           jsonStatus.classList.remove('hidden');
         }

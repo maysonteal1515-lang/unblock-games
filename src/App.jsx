@@ -14,7 +14,14 @@ export default function App() {
       const saved = localStorage.getItem('unblock_games_catalog');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(g => g.id));
+          const missingDefaults = INITIAL_GAMES.filter(g => !existingIds.has(g.id));
+          if (missingDefaults.length > 0) {
+            return [...INITIAL_GAMES, ...parsed.filter(g => g.isCustom)];
+          }
+          return parsed;
+        }
       }
     } catch (e) {
       console.warn('Failed to load local games catalog, falling back to default', e);

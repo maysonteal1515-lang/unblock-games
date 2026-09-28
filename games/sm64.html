@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Mario 64 - 3D Web Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #020617;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .hud-text {
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <div id="canvas-container"></div>
+
+  <!-- In-game HUD -->
+  <div class="absolute top-4 left-4 z-10 flex items-center gap-6 pointer-events-none">
+    <!-- Mario Lives -->
+    <div class="flex items-center gap-2 font-black text-xl text-yellow-400 hud-text">
+      <div class="w-8 h-8 rounded-full bg-red-600 border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-md">
+        M
+      </div>
+      <span>✕ 4</span>
+    </div>
+
+    <!-- Power Stars -->
+    <div class="flex items-center gap-2 font-black text-xl text-yellow-300 hud-text">
+      <span class="text-2xl">⭐</span>
+      <span id="starCount">0</span>
+    </div>
+
+    <!-- Yellow Coins -->
+    <div class="flex items-center gap-2 font-black text-xl text-amber-400 hud-text">
+      <span class="text-2xl">🟡</span>
+      <span id="coinCount">0 / 8</span>
+    </div>
+
+    <!-- N64 Power Pie Meter -->
+    <div class="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-xs">
+      <span class="text-xs font-bold text-slate-300">POWER</span>
+      <div class="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center bg-blue-600 overflow-hidden relative">
+        <div id="healthSlice" class="w-full h-full bg-emerald-500 origin-center transition-all duration-300"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Right Action Controls -->
+  <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+    <button id="kbToggleBtn" class="px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-cyan-300 font-semibold rounded-xl border border-cyan-500/40 text-xs shadow-md">
+      ⌨️ PC Keyboard
+    </button>
+    <a href="./n64-player.html?game=sm64" class="px-3 py-1.5 bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-red-900/30 flex items-center gap-1.5 transition-all">
+      <span>Full N64 ROM</span>
+      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    </a>
+    <button id="audioBtn" class="p-2 bg-slate-900/80 hover:bg-slate-800 text-white rounded-xl border border-slate-700 text-xs">
+      🔊
+    </button>
+  </div>
+
+  <!-- Interactive PC Keyboard HUD -->
+  <div id="keyboardHud" class="absolute top-16 right-4 z-20 bg-slate-950/90 border border-slate-800 backdrop-blur-md rounded-2xl p-4 shadow-2xl text-xs text-slate-300 select-none max-w-xs transition-all">
+    <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3 font-bold text-white">
+      <span>PC Keyboard Controls</span>
+      <span class="text-[10px] text-emerald-400 font-mono">ACTIVE ●</span>
+    </div>
+    <div class="space-y-2.5 font-mono text-[11px]">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 font-sans">Run / Move:</span>
+        <div class="flex gap-1">
+          <kbd id="k_w" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">W</kbd>
+          <kbd id="k_a" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">A</kbd>
+          <kbd id="k_s" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">S</kbd>
+          <kbd id="k_d" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">D</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 font-sans">Triple Jump:</span>
+        <div class="flex gap-1">
+          <kbd id="k_space" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-bold">SPACE</kbd>
+          <span class="text-slate-600">/</span>
+          <kbd id="k_x" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">X</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 font-sans">Ground Pound:</span>
+        <div class="flex gap-1">
+          <kbd id="k_z" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-bold">Z</kbd>
+          <span class="text-slate-600">/</span>
+          <kbd id="k_shift" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-bold">SHIFT</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 font-sans">Punch / Attack:</span>
+        <div class="flex gap-1">
+          <kbd id="k_c" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-red-400 font-bold">C</kbd>
+          <span class="text-slate-600">/</span>
+          <kbd id="k_enter" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-red-400 font-bold">ENTER</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 font-sans">Orbit Camera:</span>
+        <div class="flex gap-1">
+          <kbd id="k_q" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">Q</kbd>
+          <kbd id="k_e" class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold">E</kbd>
+          <span class="text-slate-500 font-sans text-[10px]">or Drag</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions on screen -->
+  <div class="absolute bottom-4 left-4 z-10 bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 pointer-events-none max-w-sm">
+    <div class="font-bold text-yellow-400 mb-1 flex items-center gap-1.5">
+      <span>🎮 CONTROLS</span>
+      <span class="text-slate-500 font-normal">· Peach's Castle Courtyard</span>
+    </div>
+    <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-slate-400 font-mono">
+      <div>WASD / Arrows: <span class="text-white">Run</span></div>
+      <div>Space / X: <span class="text-white">Jump / Double / Triple</span></div>
+      <div>Z / Shift: <span class="text-white">Ground Pound</span></div>
+      <div>C / Enter: <span class="text-white">Punch / Attack</span></div>
+      <div>Mouse drag / Q, E: <span class="text-white">Camera Orbit</span></div>
+      <div>Collect 8 Coins: <span class="text-yellow-300">Unlock Star!</span></div>
+    </div>
+  </div>
+
+  <!-- Victory Banner Modal -->
+  <div id="starBanner" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-xs text-center p-6">
+    <div class="text-6xl animate-bounce mb-3">⭐</div>
+    <h2 class="text-3xl font-extrabold text-yellow-400 hud-text mb-2">HERE WE GO!</h2>
+    <p class="text-sm text-slate-200 max-w-md mb-6">
+      You collected all 8 Red Coins and obtained the Power Star of Peach's Castle!
+    </p>
+    <div class="flex gap-3">
+      <button onclick="restartCourse()" class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg">
+        Play Course Again
+      </button>
+      <a href="./n64-player.html?game=sm64" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg">
+        Open Full N64 Emulator
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer (Retro 8-bit / 16-bit sound generator)
+    let audioCtx = null;
+    let audioEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (type === 'jump') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(450, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } else if (type === 'coin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now); // B5
+        osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'pound') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'punch') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } else if (type === 'star') {
+        // Star fanfare
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+        notes.forEach((freq, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.type = 'triangle';
+          o.frequency.value = freq;
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          g.gain.setValueAtTime(0.2, now + i * 0.1);
+          g.gain.exponentialRampToValueAtTime(0.01, now + (i + 1) * 0.15);
+          o.start(now + i * 0.1);
+          o.stop(now + (i + 1) * 0.15);
+        });
+      }
+    }
+
+    document.getElementById('audioBtn').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audioBtn').innerText = audioEnabled ? '🔊' : '🔇';
+    });
+
+    // Three.js 3D Setup
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x60a5fa); // Sky Blue N64 Mario sky
+    scene.fog = new THREE.FogExp2(0x93c5fd, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff8e7, 0.9);
+    sunLight.position.set(40, 70, 30);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 200;
+    sunLight.shadow.camera.left = -60;
+    sunLight.shadow.camera.right = 60;
+    sunLight.shadow.camera.top = 60;
+    sunLight.shadow.camera.bottom = -60;
+    scene.add(sunLight);
+
+    // Build Peach's Castle Courtyard Environment
+    const terrainMaterial = new THREE.MeshLambertMaterial({ color: 0x48bb78 }); // Grass green
+    const groundGeo = new THREE.PlaneGeometry(160, 160, 32, 32);
+    const ground = new THREE.Mesh(groundGeo, terrainMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Castle Moat / Water
+    const waterGeo = new THREE.RingGeometry(24, 38, 32);
+    const waterMat = new THREE.MeshLambertMaterial({ color: 0x0284c7, transparent: true, opacity: 0.85 });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = 0.05;
+    scene.add(water);
+
+    // Stone Castle Bridge
+    const bridgeGeo = new THREE.BoxGeometry(10, 0.6, 26);
+    const stoneMat = new THREE.MeshLambertMaterial({ color: 0xd1d5db });
+    const bridge = new THREE.Mesh(bridgeGeo, stoneMat);
+    bridge.position.set(0, 0.3, 10);
+    bridge.receiveShadow = true;
+    bridge.castShadow = true;
+    scene.add(bridge);
+
+    // Castle Facade Structure
+    const castleMat = new THREE.MeshLambertMaterial({ color: 0xf3f4f6 });
+    const roofMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 }); // Mario Red Roof
+
+    // Central Castle Keep
+    const castleBase = new THREE.Mesh(new THREE.CylinderGeometry(14, 15, 24, 16), castleMat);
+    castleBase.position.set(0, 12, -25);
+    castleBase.castShadow = true;
+    castleBase.receiveShadow = true;
+    scene.add(castleBase);
+
+    // Castle Central Cone Roof
+    const mainRoof = new THREE.Mesh(new THREE.ConeGeometry(16, 16, 16), roofMat);
+    mainRoof.position.set(0, 32, -25);
+    mainRoof.castShadow = true;
+    scene.add(mainRoof);
+
+    // Flanking Turrets
+    [-18, 18].forEach(xOffset => {
+      const turret = new THREE.Mesh(new THREE.CylinderGeometry(4, 4.5, 20, 12), castleMat);
+      turret.position.set(xOffset, 10, -22);
+      turret.castShadow = true;
+      scene.add(turret);
+
+      const turretRoof = new THREE.Mesh(new THREE.ConeGeometry(5, 8, 12), roofMat);
+      turretRoof.position.set(xOffset, 24, -22);
+      turretRoof.castShadow = true;
+      scene.add(turretRoof);
+    });
+
+    // Stained Glass Peach Window
+    const glassMat = new THREE.MeshBasicMaterial({ color: 0xf472b6 });
+    const glass = new THREE.Mesh(new THREE.CircleGeometry(3.5, 16), glassMat);
+    glass.position.set(0, 18, -10.9);
+    scene.add(glass);
+
+    // Trees (classic Bob-omb Battlefield low-poly trees)
+    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x78350f });
+    const leavesMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
+    const treePositions = [
+      [-30, 20], [-25, 40], [-40, -10], [30, 25], [35, 45], [42, -5],
+      [-15, 45], [18, 50], [-35, 60], [35, 60]
+    ];
+    treePositions.forEach(([x, z]) => {
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 5, 8), trunkMat);
+      trunk.position.set(x, 2.5, z);
+      trunk.castShadow = true;
+      scene.add(trunk);
+
+      const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(3.5), leavesMat);
+      foliage.position.set(x, 7, z);
+      foliage.castShadow = true;
+      scene.add(foliage);
+    });
+
+    // Wooden Slopes & Obstacle Platforms
+    const woodMat = new THREE.MeshLambertMaterial({ color: 0xb45309 });
+    const platform1 = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 8), woodMat);
+    platform1.position.set(-20, 1.5, 12);
+    platform1.castShadow = true;
+    platform1.receiveShadow = true;
+    scene.add(platform1);
+
+    const platform2 = new THREE.Mesh(new THREE.BoxGeometry(7, 6, 7), woodMat);
+    platform2.position.set(-20, 3, -2);
+    platform2.castShadow = true;
+    platform2.receiveShadow = true;
+    scene.add(platform2);
+
+    // Coins (8 Red / Gold Coins)
+    let coinsCollected = 0;
+    const coins = [];
+    const coinGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.25, 16);
+    const coinMat = new THREE.MeshLambertMaterial({ color: 0xef4444, emissive: 0x7f1d1d }); // Red Coins
+
+    const coinSpawns = [
+      [0, 1.2, 10],     // On bridge
+      [-20, 4.2, 12],   // On platform 1
+      [-20, 7.2, -2],   // On platform 2
+      [20, 1.2, 10],    // Right lawn
+      [-10, 1.2, 35],   // Courtyard gate
+      [10, 1.2, 35],    // Courtyard gate
+      [28, 1.2, -15],   // Castle side
+      [-28, 1.2, -15]   // Castle side
+    ];
+
+    coinSpawns.forEach(([x, y, z]) => {
+      const c = new THREE.Mesh(coinGeo, coinMat);
+      c.position.set(x, y, z);
+      c.rotation.x = Math.PI / 2;
+      c.castShadow = true;
+      scene.add(c);
+      coins.push(c);
+    });
+
+    // Power Star (Hidden until 8 coins collected)
+    const starGroup = new THREE.Group();
+    const starMat = new THREE.MeshLambertMaterial({ color: 0xfacc15, emissive: 0xca8a04 });
+    const starCore = new THREE.Mesh(new THREE.OctahedronGeometry(2), starMat);
+    starGroup.add(starCore);
+    starGroup.position.set(0, 42, -25); // At top of Peach's castle
+    starGroup.visible = false;
+    scene.add(starGroup);
+
+    // Construct 3D Mario Character Model
+    const mario = new THREE.Group();
+
+    // Materials
+    const mRed = new THREE.MeshLambertMaterial({ color: 0xdc2626 });
+    const mBlue = new THREE.MeshLambertMaterial({ color: 0x2563eb });
+    const mWhite = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const mSkin = new THREE.MeshLambertMaterial({ color: 0xfcd34d });
+    const mBrown = new THREE.MeshLambertMaterial({ color: 0x451a03 });
+
+    // Torso (Overalls & Red Shirt)
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.9, 1.4, 12), mBlue);
+    torso.position.y = 1.4;
+    torso.castShadow = true;
+    mario.add(torso);
+
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), mSkin);
+    head.position.y = 2.4;
+    head.castShadow = true;
+    mario.add(head);
+
+    // Cap
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.35, 12), mRed);
+    cap.position.set(0, 2.8, 0);
+    const capVisor = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.5), mRed);
+    capVisor.position.set(0, 2.7, 0.6);
+    mario.add(cap);
+    mario.add(capVisor);
+
+    // Nose & Mustache
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), mSkin);
+    nose.position.set(0, 2.4, 0.65);
+    const mustache = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.2), mBrown);
+    mustache.position.set(0, 2.2, 0.6);
+    mario.add(nose);
+    mario.add(mustache);
+
+    // Legs
+    const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.9, 8), mBlue);
+    leftLeg.position.set(-0.4, 0.6, 0);
+    const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.9, 8), mBlue);
+    rightLeg.position.set(0.4, 0.6, 0);
+    mario.add(leftLeg);
+    mario.add(rightLeg);
+
+    // Shoes
+    const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.7), mBrown);
+    leftShoe.position.set(-0.4, 0.15, 0.15);
+    const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.7), mBrown);
+    rightShoe.position.set(0.4, 0.15, 0.15);
+    mario.add(leftShoe);
+    mario.add(rightShoe);
+
+    // Hands / Gloves
+    const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), mWhite);
+    leftHand.position.set(-1.0, 1.4, 0);
+    const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), mWhite);
+    rightHand.position.set(1.0, 1.4, 0);
+    mario.add(leftHand);
+    mario.add(rightHand);
+
+    mario.position.set(0, 0, 30);
+    scene.add(mario);
+
+    // Physics State
+    const marioState = {
+      pos: mario.position,
+      vel: new THREE.Vector3(0, 0, 0),
+      isGrounded: true,
+      facingAngle: 0,
+      jumpStreak: 0,
+      lastJumpTime: 0,
+      isPounding: false
+    };
+
+    // Keyboard Input State & Key Badge Feedback
+    const keys = {};
+
+    function updateBadge(id, active, activeClass = 'bg-cyan-500 text-slate-950') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (active) {
+        el.className = `px-1.5 py-0.5 rounded ${activeClass} font-bold shadow-md transform scale-110 transition-transform`;
+      } else {
+        el.className = 'px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-bold transition-transform';
+      }
+    }
+
+    // Auto-focus on start & click
+    window.focus();
+    window.addEventListener('load', () => window.focus());
+    document.body.addEventListener('click', () => { window.focus(); initAudio(); });
+    container.addEventListener('click', () => { window.focus(); initAudio(); });
+
+    document.getElementById('kbToggleBtn').addEventListener('click', () => {
+      document.getElementById('keyboardHud').classList.toggle('hidden');
+    });
+
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd'].includes(k)) {
+        e.preventDefault();
+      }
+
+      keys[k] = true;
+      keys[code] = true;
+      initAudio();
+
+      if (k === 'w' || k === 'arrowup') updateBadge('k_w', true);
+      if (k === 'a' || k === 'arrowleft') updateBadge('k_a', true);
+      if (k === 's' || k === 'arrowdown') updateBadge('k_s', true);
+      if (k === 'd' || k === 'arrowright') updateBadge('k_d', true);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'x') updateBadge('k_x', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'z') updateBadge('k_z', true, 'bg-amber-400 text-slate-950');
+      if (k === 'shift' || code.includes('Shift')) updateBadge('k_shift', true, 'bg-amber-400 text-slate-950');
+      if (k === 'c') updateBadge('k_c', true, 'bg-red-500 text-white');
+      if (k === 'enter') updateBadge('k_enter', true, 'bg-red-500 text-white');
+      if (k === 'q') updateBadge('k_q', true);
+      if (k === 'e') updateBadge('k_e', true);
+
+      if (e.key === ' ' || k === 'x') {
+        doJump();
+      }
+      if (k === 'z' || e.key === 'Shift') {
+        doGroundPound();
+      }
+      if (k === 'c' || e.key === 'Enter') {
+        doPunch();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      keys[k] = false;
+      keys[code] = false;
+
+      if (k === 'w' || k === 'arrowup') updateBadge('k_w', false);
+      if (k === 'a' || k === 'arrowleft') updateBadge('k_a', false);
+      if (k === 's' || k === 'arrowdown') updateBadge('k_s', false);
+      if (k === 'd' || k === 'arrowright') updateBadge('k_d', false);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', false);
+      if (k === 'x') updateBadge('k_x', false);
+      if (k === 'z') updateBadge('k_z', false);
+      if (k === 'shift' || code.includes('Shift')) updateBadge('k_shift', false);
+      if (k === 'c') updateBadge('k_c', false);
+      if (k === 'enter') updateBadge('k_enter', false);
+      if (k === 'q') updateBadge('k_q', false);
+      if (k === 'e') updateBadge('k_e', false);
+    });
+
+    // Jump Physics (Single, Double, and Triple Jump)
+    function doJump() {
+      const now = performance.now();
+      if (marioState.isGrounded) {
+        if (now - marioState.lastJumpTime < 600) {
+          marioState.jumpStreak = Math.min(marioState.jumpStreak + 1, 3);
+        } else {
+          marioState.jumpStreak = 1;
+        }
+
+        let jumpForce = 15;
+        if (marioState.jumpStreak === 2) jumpForce = 18;
+        if (marioState.jumpStreak === 3) jumpForce = 22;
+
+        marioState.vel.y = jumpForce;
+        marioState.isGrounded = false;
+        marioState.lastJumpTime = now;
+        playSound('jump');
+      }
+    }
+
+    function doGroundPound() {
+      if (!marioState.isGrounded) {
+        marioState.vel.y = -35;
+        marioState.isPounding = true;
+      }
+    }
+
+    function doPunch() {
+      playSound('punch');
+      rightHand.position.z = 0.8;
+      setTimeout(() => { rightHand.position.z = 0; }, 150);
+    }
+
+    // Camera Orbit Angle
+    let cameraAngle = 0;
+    let isMouseDown = false;
+    let prevMouseX = 0;
+
+    window.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      prevMouseX = e.clientX;
+    });
+    window.addEventListener('mouseup', () => { isMouseDown = false; });
+    window.addEventListener('mousemove', (e) => {
+      if (isMouseDown) {
+        const delta = e.clientX - prevMouseX;
+        cameraAngle -= delta * 0.006;
+        prevMouseX = e.clientX;
+      }
+    });
+
+    window.restartCourse = function() {
+      document.getElementById('starBanner').classList.add('hidden');
+      coinsCollected = 0;
+      document.getElementById('coinCount').innerText = `0 / 8`;
+      coins.forEach(c => { c.visible = true; });
+      mario.position.set(0, 0, 30);
+      marioState.vel.set(0, 0, 0);
+    };
+
+    // Main Game Loop (60 FPS)
+    let lastTime = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const currentTime = performance.now();
+      const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
+      lastTime = currentTime;
+
+      // Handle Input Direction relative to camera
+      let moveX = 0;
+      let moveZ = 0;
+
+      if (keys['w'] || keys['arrowup']) moveZ -= 1;
+      if (keys['s'] || keys['arrowdown']) moveZ += 1;
+      if (keys['a'] || keys['arrowleft']) moveX -= 1;
+      if (keys['d'] || keys['arrowright']) moveX += 1;
+      if (keys['q']) cameraAngle += 2 * dt;
+      if (keys['e']) cameraAngle -= 2 * dt;
+
+      const inputLen = Math.sqrt(moveX * moveX + moveZ * moveZ);
+      const speed = 16;
+
+      if (inputLen > 0) {
+        moveX /= inputLen;
+        moveZ /= inputLen;
+
+        // Rotate by camera angle
+        const targetX = Math.cos(cameraAngle) * moveX - Math.sin(cameraAngle) * moveZ;
+        const targetZ = Math.sin(cameraAngle) * moveX + Math.cos(cameraAngle) * moveZ;
+
+        marioState.vel.x = targetX * speed;
+        marioState.vel.z = targetZ * speed;
+        marioState.facingAngle = Math.atan2(targetX, targetZ);
+
+        // Run animation
+        const runCycle = Math.sin(currentTime * 0.015);
+        leftLeg.rotation.x = runCycle * 0.7;
+        rightLeg.rotation.x = -runCycle * 0.7;
+        leftHand.position.z = -runCycle * 0.4;
+        rightHand.position.z = runCycle * 0.4;
+      } else {
+        marioState.vel.x *= 0.8;
+        marioState.vel.z *= 0.8;
+        leftLeg.rotation.x = 0;
+        rightLeg.rotation.x = 0;
+      }
+
+      // Apply Gravity
+      marioState.vel.y -= 42 * dt;
+
+      // Update Mario Position
+      mario.position.x += marioState.vel.x * dt;
+      mario.position.y += marioState.vel.y * dt;
+      mario.position.z += marioState.vel.z * dt;
+
+      // Floor & Platform Collision
+      let groundHeight = 0;
+
+      // Platform 1 collision
+      if (mario.position.x > -24 && mario.position.x < -16 && mario.position.z > 8 && mario.position.z < 16) {
+        groundHeight = 3;
+      }
+      // Platform 2 collision
+      if (mario.position.x > -24 && mario.position.x < -16 && mario.position.z > -6 && mario.position.z < 2) {
+        groundHeight = 6;
+      }
+
+      if (mario.position.y <= groundHeight) {
+        mario.position.y = groundHeight;
+        if (marioState.isPounding) {
+          playSound('pound');
+          marioState.isPounding = false;
+        }
+        marioState.vel.y = 0;
+        marioState.isGrounded = true;
+      } else {
+        marioState.isGrounded = false;
+      }
+
+      // Smooth Rotation
+      mario.rotation.y = marioState.facingAngle;
+
+      // Spin & Collect Coins
+      coins.forEach(c => {
+        if (!c.visible) return;
+        c.rotation.z += 2.5 * dt;
+
+        const dist = mario.position.distanceTo(c.position);
+        if (dist < 2.0) {
+          c.visible = false;
+          coinsCollected++;
+          playSound('coin');
+          document.getElementById('coinCount').innerText = `${coinsCollected} / 8`;
+
+          if (coinsCollected === 8) {
+            playSound('star');
+            starGroup.visible = true;
+            document.getElementById('starCount').innerText = '1';
+            document.getElementById('starBanner').classList.remove('hidden');
+          }
+        }
+      });
+
+      // Spin Power Star
+      if (starGroup.visible) {
+        starGroup.rotation.y += 3 * dt;
+      }
+
+      // Smooth Follow Camera
+      const camDist = 18;
+      const camHeight = 8;
+      const targetCamX = mario.position.x + Math.sin(cameraAngle) * camDist;
+      const targetCamZ = mario.position.z + Math.cos(cameraAngle) * camDist;
+      const targetCamY = mario.position.y + camHeight;
+
+      camera.position.x += (targetCamX - camera.position.x) * 0.1;
+      camera.position.y += (targetCamY - camera.position.y) * 0.1;
+      camera.position.z += (targetCamZ - camera.position.z) * 0.1;
+      camera.lookAt(mario.position.x, mario.position.y + 2, mario.position.z);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Window Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

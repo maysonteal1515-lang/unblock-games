@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoldenEye 007</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+    #fpsCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .hud-text {
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-full bg-slate-950">
+
+  <!-- Header -->
+  <header class="h-11 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded bg-slate-700 text-white font-black text-[11px] tracking-wider">N64</span>
+      <span class="font-bold text-white text-sm">GoldenEye 007</span>
+      <span class="text-slate-600 hidden sm:inline">|</span>
+      <span class="text-slate-400 hidden sm:inline">Facility · Chemical Warfare Facility</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="kbToggleBtn" class="px-2.5 py-1 bg-amber-950/80 border border-amber-500/40 text-amber-300 hover:bg-amber-900/60 rounded text-xs transition-colors flex items-center gap-1.5 font-semibold">
+        <span>⌨️ Keyboard Keys</span>
+      </button>
+      <button id="soundBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">🔊 Sound: ON</button>
+      <button id="fullscreenBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Interactive PC Keyboard HUD -->
+  <div id="keyboardHud" class="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 z-10 transition-all select-none">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">MOVE & STRAFE:</span>
+        <kbd id="k_w" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">W</kbd>
+        <kbd id="k_a" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">A</kbd>
+        <kbd id="k_s" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">S</kbd>
+        <kbd id="k_d" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">D</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">AIM / TURN:</span>
+        <kbd id="k_left" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">←</kbd>
+        <kbd id="k_right" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">→</kbd>
+        <span class="text-slate-500 text-[10px]">or Mouse</span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">SHOOT PP7:</span>
+        <kbd id="k_space" class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300 font-mono font-bold transition-all shadow-xs">SPACE</kbd>
+        <span class="text-slate-500">or</span>
+        <span class="text-amber-400 font-bold">CLICK</span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">RELOAD:</span>
+        <kbd id="k_r" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-red-400 font-mono font-bold transition-all shadow-xs">R</kbd>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-amber-400 flex items-center gap-1.5 font-medium">
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <span>Agent 007 Keyboard Active</span>
+    </div>
+  </div>
+
+  <!-- FPS View Area -->
+  <div class="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center">
+    <canvas id="fpsCanvas" width="800" height="480"></canvas>
+
+    <!-- GoldenEye Classic Left Health & Armor Bars -->
+    <div class="absolute left-6 top-6 flex items-center gap-2 pointer-events-none">
+      <!-- Blue Armor Bar -->
+      <div class="flex flex-col items-center">
+        <div class="w-3.5 h-36 bg-slate-950/80 border border-slate-700 rounded-sm overflow-hidden flex flex-col justify-end p-0.5">
+          <div id="armorBar" class="w-full bg-blue-500 h-full transition-all duration-200"></div>
+        </div>
+        <span class="text-[10px] font-black text-blue-400 mt-1">ARM</span>
+      </div>
+
+      <!-- Red Health Bar -->
+      <div class="flex flex-col items-center">
+        <div class="w-3.5 h-36 bg-slate-950/80 border border-slate-700 rounded-sm overflow-hidden flex flex-col justify-end p-0.5">
+          <div id="healthBar" class="w-full bg-red-600 h-full transition-all duration-200"></div>
+        </div>
+        <span class="text-[10px] font-black text-red-500 mt-1">LIFE</span>
+      </div>
+    </div>
+
+    <!-- Ammo Counter -->
+    <div class="absolute right-6 bottom-6 text-right pointer-events-none hud-text">
+      <div class="text-xs text-slate-400 font-bold uppercase tracking-wider">Silenced PP7</div>
+      <div class="text-3xl font-mono font-black text-amber-400">
+        <span id="clipCount">7</span> / <span id="reserveCount" class="text-xl text-slate-400">28</span>
+      </div>
+    </div>
+
+    <!-- Target Crosshairs -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="w-8 h-8 rounded-full border border-red-500/60 flex items-center justify-center">
+        <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+      </div>
+    </div>
+
+    <!-- Controls hint -->
+    <div class="absolute bottom-6 left-6 bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 pointer-events-none hidden sm:block">
+      <span class="text-amber-400 font-bold">CONTROLS:</span> <kbd class="text-white font-bold">WASD</kbd> Move &nbsp;·&nbsp; <kbd class="text-white font-bold">Click / Space</kbd> Shoot &nbsp;·&nbsp; <kbd class="text-white font-bold">R</kbd> Reload &nbsp;·&nbsp; <kbd class="text-white font-bold">Arrows</kbd> Turn
+    </div>
+
+    <!-- Victory Overlay -->
+    <div id="agentOverlay" class="hidden absolute inset-0 bg-black/85 backdrop-blur-xs z-30 flex flex-col items-center justify-center text-center p-6">
+      <div class="text-6xl animate-bounce mb-3">🍸</div>
+      <h2 id="agentTitle" class="text-3xl font-black text-amber-400 hud-text mb-2">MISSION COMPLETE</h2>
+      <p id="agentDesc" class="text-sm text-slate-200 mb-6 font-semibold max-w-md">Excellent work, 007. The Nerve Gas Tanks have been neutralized.</p>
+      <button onclick="restartAgent()" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-xl text-sm shadow-xl transition-transform hover:scale-105">
+        Replay Mission
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer
+    let audioEnabled = true;
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function playSfx(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+
+        if (type === 'shot') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(600, t);
+          osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+          osc.start(t);
+          osc.stop(t + 0.1);
+        } else if (type === 'reload') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        } else if (type === 'hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160, t);
+          osc.frequency.exponentialRampToValueAtTime(40, t + 0.25);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        }
+      } catch (e) {}
+    }
+
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('soundBtn').innerText = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    });
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    });
+
+    const canvas = document.getElementById('fpsCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 007 Player State
+    const player = {
+      x: 2.5, y: 2.5,
+      dirX: 1, dirY: 0,
+      planeX: 0, planeY: 0.66,
+      rotSpeed: 2.2,
+      moveSpeed: 3.2,
+      health: 100,
+      armor: 100,
+      clip: 7,
+      reserve: 28,
+      isShooting: false,
+      recoil: 0
+    };
+
+    // 2D Raycast Map (1 = Wall, 2 = Door / Barrier)
+    const map = [
+      [1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,1,0,0,0,0,0,1],
+      [1,0,0,0,0,1,0,1,1,0,0,1],
+      [1,0,0,0,0,0,0,1,1,0,0,1],
+      [1,1,2,1,1,0,0,0,0,0,0,1],
+      [1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,0,0,1,0,0,1,0,0,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    // Guards (Soviet Facility Sentries)
+    const guards = [
+      { x: 7.5, y: 2.5, hp: 2, alive: true, shootTimer: 2.0 },
+      { x: 9.5, y: 6.5, hp: 2, alive: true, shootTimer: 2.5 },
+      { x: 4.5, y: 6.5, hp: 2, alive: true, shootTimer: 3.0 }
+    ];
+
+    // Input & Key HUD handlers
+    const keys = {};
+
+    function updateBadge(id, active, activeClass = 'bg-cyan-500 text-slate-950') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (active) {
+        el.className = `px-2 py-0.5 rounded ${activeClass} font-mono font-bold shadow-md transform scale-110 transition-transform`;
+      } else {
+        el.className = 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-transform shadow-xs';
+      }
+    }
+
+    // Auto-focus on start & click
+    window.focus();
+    window.addEventListener('load', () => window.focus());
+    document.body.addEventListener('click', () => { window.focus(); initAudio(); });
+    canvas.addEventListener('click', () => { window.focus(); initAudio(); });
+
+    document.getElementById('kbToggleBtn').addEventListener('click', () => {
+      document.getElementById('keyboardHud').classList.toggle('hidden');
+    });
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'r'].includes(k)) {
+        e.preventDefault();
+      }
+
+      keys[k] = true;
+      keys[code] = true;
+      initAudio();
+
+      if (k === 'w') updateBadge('k_w', true);
+      if (k === 'a') updateBadge('k_a', true);
+      if (k === 's') updateBadge('k_s', true);
+      if (k === 'd') updateBadge('k_d', true);
+      if (k === 'arrowleft') updateBadge('k_left', true);
+      if (k === 'arrowright') updateBadge('k_right', true);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', true, 'bg-amber-400 text-slate-950');
+      if (k === 'r') updateBadge('k_r', true, 'bg-red-500 text-white');
+
+      if (e.key === ' ' && !player.isShooting) {
+        shoot();
+      }
+      if (k === 'r') {
+        reload();
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      keys[k] = false;
+      keys[code] = false;
+
+      if (k === 'w') updateBadge('k_w', false);
+      if (k === 'a') updateBadge('k_a', false);
+      if (k === 's') updateBadge('k_s', false);
+      if (k === 'd') updateBadge('k_d', false);
+      if (k === 'arrowleft') updateBadge('k_left', false);
+      if (k === 'arrowright') updateBadge('k_right', false);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', false);
+      if (k === 'r') updateBadge('k_r', false);
+    });
+
+    canvas.addEventListener('mousedown', () => {
+      initAudio();
+      shoot();
+    });
+
+    function shoot() {
+      if (player.clip <= 0) {
+        reload();
+        return;
+      }
+      player.clip--;
+      player.recoil = 12;
+      playSfx('shot');
+      document.getElementById('clipCount').innerText = player.clip;
+
+      // Check hit center-line guard
+      guards.forEach(g => {
+        if (!g.alive) return;
+        const dx = g.x - player.x;
+        const dy = g.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Angle check to player direction
+        const dot = (dx * player.dirX + dy * player.dirY) / dist;
+        if (dot > 0.94 && dist < 8) {
+          g.hp--;
+          playSfx('hit');
+          if (g.hp <= 0) {
+            g.alive = false;
+            checkVictory();
+          }
+        }
+      });
+    }
+
+    function reload() {
+      if (player.clip >= 7 || player.reserve <= 0) return;
+      playSfx('reload');
+      const need = 7 - player.clip;
+      const taking = Math.min(need, player.reserve);
+      player.clip += taking;
+      player.reserve -= taking;
+      document.getElementById('clipCount').innerText = player.clip;
+      document.getElementById('reserveCount').innerText = player.reserve;
+    }
+
+    function checkVictory() {
+      if (guards.every(g => !g.alive)) {
+        setTimeout(() => {
+          document.getElementById('agentOverlay').classList.remove('hidden');
+        }, 600);
+      }
+    }
+
+    window.restartAgent = function() {
+      document.getElementById('agentOverlay').classList.add('hidden');
+      player.x = 2.5;
+      player.y = 2.5;
+      player.health = 100;
+      player.armor = 100;
+      player.clip = 7;
+      player.reserve = 28;
+      document.getElementById('clipCount').innerText = player.clip;
+      document.getElementById('reserveCount').innerText = player.reserve;
+      document.getElementById('healthBar').style.height = '100%';
+      document.getElementById('armorBar').style.height = '100%';
+      guards.forEach(g => { g.alive = true; g.hp = 2; });
+    };
+
+    let lastTime = performance.now();
+
+    function update(dt) {
+      if (player.recoil > 0) player.recoil -= 60 * dt;
+
+      // Turning
+      let rot = 0;
+      if (keys['arrowleft']) rot -= player.rotSpeed * dt;
+      if (keys['arrowright']) rot += player.rotSpeed * dt;
+
+      if (rot !== 0) {
+        const oldDirX = player.dirX;
+        player.dirX = player.dirX * Math.cos(rot) - player.dirY * Math.sin(rot);
+        player.dirY = oldDirX * Math.sin(rot) + player.dirY * Math.cos(rot);
+        const oldPlaneX = player.planeX;
+        player.planeX = player.planeX * Math.cos(rot) - player.planeY * Math.sin(rot);
+        player.planeY = oldPlaneX * Math.sin(rot) + player.planeY * Math.cos(rot);
+      }
+
+      // Movement
+      let moveForward = 0;
+      let moveStrafe = 0;
+      if (keys['w']) moveForward += 1;
+      if (keys['s']) moveForward -= 1;
+      if (keys['d']) moveStrafe += 1;
+      if (keys['a']) moveStrafe -= 1;
+
+      if (moveForward !== 0) {
+        const nx = player.x + player.dirX * moveForward * player.moveSpeed * dt;
+        const ny = player.y + player.dirY * moveForward * player.moveSpeed * dt;
+        if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx;
+        if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
+      }
+
+      if (moveStrafe !== 0) {
+        const nx = player.x + player.planeX * moveStrafe * player.moveSpeed * dt;
+        const ny = player.y + player.planeY * moveStrafe * player.moveSpeed * dt;
+        if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx;
+        if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
+      }
+
+      // Enemy AI (Guards shooting Bond)
+      guards.forEach(g => {
+        if (!g.alive) return;
+        const dx = player.x - g.x;
+        const dy = player.y - g.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 6) {
+          g.shootTimer -= dt;
+          if (g.shootTimer <= 0) {
+            g.shootTimer = 2.0;
+            playSfx('shot');
+            // Bond takes damage
+            if (player.armor > 0) {
+              player.armor = Math.max(0, player.armor - 20);
+              document.getElementById('armorBar').style.height = `${player.armor}%`;
+            } else {
+              player.health = Math.max(0, player.health - 25);
+              document.getElementById('healthBar').style.height = `${player.health}%`;
+              if (player.health <= 0) {
+                document.getElementById('agentOverlay').classList.remove('hidden');
+                document.getElementById('agentTitle').innerText = '007 KIA';
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderRaycast() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Facility Ceiling & Floor
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+      const zBuffer = [];
+
+      // Raycasting loop
+      for (let x = 0; x < canvas.width; x += 2) {
+        const cameraX = (2 * x) / canvas.width - 1;
+        const rayDirX = player.dirX + player.planeX * cameraX;
+        const rayDirY = player.dirY + player.planeY * cameraX;
+
+        let mapX = Math.floor(player.x);
+        let mapY = Math.floor(player.y);
+
+        const deltaDistX = Math.abs(1 / rayDirX);
+        const deltaDistY = Math.abs(1 / rayDirY);
+
+        let stepX, stepY;
+        let sideDistX, sideDistY;
+
+        if (rayDirX < 0) {
+          stepX = -1;
+          sideDistX = (player.x - mapX) * deltaDistX;
+        } else {
+          stepX = 1;
+          sideDistX = (mapX + 1.0 - player.x) * deltaDistX;
+        }
+        if (rayDirY < 0) {
+          stepY = -1;
+          sideDistY = (player.y - mapY) * deltaDistY;
+        } else {
+          stepY = 1;
+          sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
+        }
+
+        let hit = 0;
+        let side = 0;
+
+        while (hit === 0) {
+          if (sideDistX < sideDistY) {
+            sideDistX += deltaDistX;
+            mapX += stepX;
+            side = 0;
+          } else {
+            sideDistY += deltaDistY;
+            mapY += stepY;
+            side = 1;
+          }
+          if (map[mapY] && map[mapY][mapX] > 0) hit = 1;
+        }
+
+        let perpWallDist = side === 0 ? (mapX - player.x + (1 - stepX) / 2) / rayDirX : (mapY - player.y + (1 - stepY) / 2) / rayDirY;
+        zBuffer[x] = perpWallDist;
+        zBuffer[x + 1] = perpWallDist;
+
+        const lineHeight = Math.round(canvas.height / perpWallDist);
+        const drawStart = Math.max(0, -lineHeight / 2 + canvas.height / 2);
+        const drawEnd = Math.min(canvas.height - 1, lineHeight / 2 + canvas.height / 2);
+
+        // Facility Grey/Slate Wall Coloring
+        ctx.fillStyle = side === 1 ? '#334155' : '#475569';
+        ctx.fillRect(x, drawStart, 2, drawEnd - drawStart);
+      }
+
+      // Draw Guards in depth
+      guards.forEach(g => {
+        if (!g.alive) return;
+        const spriteX = g.x - player.x;
+        const spriteY = g.y - player.y;
+
+        const invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+        const transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+        const transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+
+        if (transformY > 0.5) {
+          const spriteScreenX = Math.round((canvas.width / 2) * (1 + transformX / transformY));
+          const spriteHeight = Math.abs(Math.round(canvas.height / transformY));
+          const spriteWidth = Math.abs(Math.round(canvas.height / transformY * 0.6));
+
+          if (spriteScreenX > 0 && spriteScreenX < canvas.width && transformY < zBuffer[spriteScreenX]) {
+            // Soviet Guard Uniform
+            ctx.fillStyle = '#b45309'; // Khaki brown coat
+            ctx.fillRect(spriteScreenX - spriteWidth / 2, canvas.height / 2 - spriteHeight / 4, spriteWidth, spriteHeight * 0.7);
+
+            // Sentry Cap
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(spriteScreenX - spriteWidth / 3, canvas.height / 2 - spriteHeight / 3, spriteWidth * 0.66, spriteHeight * 0.15);
+          }
+        }
+      });
+
+      // Draw Walther PP7 Gun Model in Foreground
+      drawGun();
+    }
+
+    function drawGun() {
+      const gunX = canvas.width / 2 + 70;
+      const gunY = canvas.height - 100 + (player.recoil || 0);
+
+      ctx.save();
+      // Silencer barrel
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(gunX - 8, gunY - 70, 16, 60);
+
+      // Gun Slide
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(gunX - 14, gunY - 20, 28, 50);
+
+      // Muzzle flash when firing
+      if (player.recoil > 6) {
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(gunX, gunY - 75, 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function gameLoop(now) {
+      requestAnimationFrame(gameLoop);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      update(dt);
+      renderRaycast();
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

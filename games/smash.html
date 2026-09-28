@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Smash Bros N64</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+    #stageCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .hud-text {
+      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-full bg-slate-950">
+
+  <!-- Header -->
+  <header class="h-11 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded bg-pink-600 text-white font-black text-[11px] tracking-wider">N64</span>
+      <span class="font-bold text-white text-sm">Super Smash Bros</span>
+      <span class="text-slate-600 hidden sm:inline">|</span>
+      <span class="text-slate-400 hidden sm:inline">Sector Z Arena · 3-Stock Match</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="kbToggleBtn" class="px-2.5 py-1 bg-pink-950/80 border border-pink-500/40 text-pink-300 hover:bg-pink-900/60 rounded text-xs transition-colors flex items-center gap-1.5 font-semibold">
+        <span>⌨️ Keyboard Keys</span>
+      </button>
+      <button id="soundBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">🔊 Sound: ON</button>
+      <button id="fullscreenBtn" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition-colors">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Interactive PC Keyboard HUD -->
+  <div id="keyboardHud" class="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 z-10 transition-all select-none">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">MOVE:</span>
+        <kbd id="k_a" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">A</kbd>
+        <kbd id="k_d" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">D</kbd>
+        <span class="text-slate-500">or</span>
+        <kbd id="k_left" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">←</kbd>
+        <kbd id="k_right" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-all shadow-xs">→</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">DOUBLE JUMP:</span>
+        <kbd id="k_w" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-mono font-bold transition-all shadow-xs">W</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_space" class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-300 font-mono font-bold transition-all shadow-xs">SPACE</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">JAB:</span>
+        <kbd id="k_j" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-yellow-300 font-mono font-bold transition-all shadow-xs">J</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_z" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-yellow-300 font-mono font-bold transition-all shadow-xs">Z</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">SMASH:</span>
+        <kbd id="k_k" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-pink-400 font-mono font-bold transition-all shadow-xs">K</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_x" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-pink-400 font-mono font-bold transition-all shadow-xs">X</kbd>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400 text-[11px] font-semibold mr-1">FIREBALL:</span>
+        <kbd id="k_l" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-red-400 font-mono font-bold transition-all shadow-xs">L</kbd>
+        <span class="text-slate-500">/</span>
+        <kbd id="k_c" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-red-400 font-mono font-bold transition-all shadow-xs">C</kbd>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>PC Keyboard Active</span>
+    </div>
+  </div>
+
+  <!-- Stage Area -->
+  <div class="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center">
+    <canvas id="stageCanvas" width="900" height="500"></canvas>
+
+    <!-- Bottom Smash Damage Percentages & Stocks -->
+    <div class="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-12 pointer-events-none">
+      <!-- Player 1 (Mario) -->
+      <div class="flex flex-col items-center bg-slate-900/80 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-red-500/40 shadow-xl">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-black text-red-400 tracking-wider">P1 MARIO</span>
+          <div id="p1Stocks" class="flex gap-1 text-xs">🔴 🔴 🔴</div>
+        </div>
+        <div class="text-3xl font-black hud-text transition-colors duration-200" id="p1Percent">
+          0<span class="text-lg text-slate-300">%</span>
+        </div>
+      </div>
+
+      <!-- CPU (Link) -->
+      <div class="flex flex-col items-center bg-slate-900/80 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-emerald-500/40 shadow-xl">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-black text-emerald-400 tracking-wider">CPU LINK</span>
+          <div id="cpuStocks" class="flex gap-1 text-xs">🟢 🟢 🟢</div>
+        </div>
+        <div class="text-3xl font-black hud-text transition-colors duration-200" id="cpuPercent">
+          0<span class="text-lg text-slate-300">%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- On-screen controls -->
+    <div class="absolute top-4 left-4 bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 pointer-events-none hidden sm:block">
+      <span class="text-pink-400 font-bold">CONTROLS:</span> <kbd class="text-white font-bold">A/D</kbd> Move &nbsp;·&nbsp; <kbd class="text-white font-bold">W / Space</kbd> Double Jump &nbsp;·&nbsp; <kbd class="text-white font-bold">J / Z</kbd> Attack &nbsp;·&nbsp; <kbd class="text-white font-bold">K / X</kbd> Smash Attack &nbsp;·&nbsp; <kbd class="text-white font-bold">L / C</kbd> Fireball
+    </div>
+
+    <!-- Victory Overlay -->
+    <div id="victoryOverlay" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xs z-30 flex flex-col items-center justify-center text-center p-6">
+      <div class="text-6xl animate-bounce mb-3" id="vicIcon">💥</div>
+      <h2 id="vicTitle" class="text-3xl font-black text-yellow-400 hud-text mb-2">GAME!</h2>
+      <p id="vicDesc" class="text-sm text-slate-200 mb-6 font-semibold">MARIO WINS!</p>
+      <button onclick="restartMatch()" class="px-6 py-2.5 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white font-black rounded-xl text-sm shadow-xl transition-transform hover:scale-105">
+        Play Rematch
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer
+    let audioEnabled = true;
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function playSfx(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+
+        if (type === 'hit') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(220, t);
+          osc.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+          osc.start(t);
+          osc.stop(t + 0.12);
+        } else if (type === 'smash') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(450, t);
+          osc.frequency.exponentialRampToValueAtTime(50, t + 0.25);
+          gain.gain.setValueAtTime(0.35, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        } else if (type === 'ko') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(600, t);
+          osc.frequency.exponentialRampToValueAtTime(100, t + 0.5);
+          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+          osc.start(t);
+          osc.stop(t + 0.5);
+        } else if (type === 'fire') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(350, t);
+          osc.frequency.exponentialRampToValueAtTime(700, t + 0.15);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+          osc.start(t);
+          osc.stop(t + 0.15);
+        }
+      } catch (e) {}
+    }
+
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('soundBtn').innerText = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    });
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    });
+
+    const canvas = document.getElementById('stageCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Platforms
+    const platforms = [
+      { x: 220, y: 360, w: 460, h: 25, type: 'main' }, // Main Stage
+      { x: 270, y: 260, w: 140, h: 12, type: 'soft' }, // Left soft platform
+      { x: 490, y: 260, w: 140, h: 12, type: 'soft' }, // Right soft platform
+      { x: 380, y: 170, w: 140, h: 12, type: 'soft' }  // Top soft platform
+    ];
+
+    // Blast zones
+    const BLAST_LEFT = -120;
+    const BLAST_RIGHT = 1020;
+    const BLAST_TOP = -150;
+    const BLAST_BOTTOM = 650;
+
+    // Fighters
+    function createFighter(x, y, isCpu, color, name) {
+      return {
+        x, y, vx: 0, vy: 0,
+        w: 36, h: 54,
+        isGrounded: false,
+        jumpsLeft: 2,
+        damage: 0,
+        stocks: 3,
+        facing: 1, // 1 right, -1 left
+        isAttacking: false,
+        attackTimer: 0,
+        attackType: '',
+        invincibleTimer: 1.5,
+        isCpu,
+        color,
+        name
+      };
+    }
+
+    let p1 = createFighter(300, 200, false, '#dc2626', 'Mario');
+    let cpu = createFighter(580, 200, true, '#10b981', 'Link');
+
+    const projectiles = [];
+    const particles = [];
+
+    function addHitParticle(x, y) {
+      for (let i = 0; i < 8; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 300,
+          vy: (Math.random() - 0.5) * 300,
+          life: 0.25,
+          color: Math.random() > 0.5 ? '#facc15' : '#ef4444'
+        });
+      }
+    }
+
+    // Input handlers & Key HUD feedback
+    const keys = {};
+
+    function updateBadge(id, active, activeClass = 'bg-cyan-500 text-slate-950') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (active) {
+        el.className = `px-2 py-0.5 rounded ${activeClass} font-mono font-bold shadow-md transform scale-110 transition-transform`;
+      } else {
+        el.className = 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono font-bold transition-transform shadow-xs';
+      }
+    }
+
+    // Auto-focus on start & click
+    window.focus();
+    window.addEventListener('load', () => window.focus());
+    document.body.addEventListener('click', () => { window.focus(); initAudio(); });
+    canvas.addEventListener('click', () => { window.focus(); initAudio(); });
+
+    document.getElementById('kbToggleBtn').addEventListener('click', () => {
+      document.getElementById('keyboardHud').classList.toggle('hidden');
+    });
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'j', 'k', 'l', 'z', 'x', 'c'].includes(k)) {
+        e.preventDefault();
+      }
+
+      keys[k] = true;
+      keys[code] = true;
+      initAudio();
+
+      if (k === 'a') updateBadge('k_a', true);
+      if (k === 'd') updateBadge('k_d', true);
+      if (k === 'arrowleft') updateBadge('k_left', true);
+      if (k === 'arrowright') updateBadge('k_right', true);
+      if (k === 'w') updateBadge('k_w', true, 'bg-cyan-400 text-slate-950');
+      if (k === ' ' || code === 'Space') updateBadge('k_space', true, 'bg-cyan-400 text-slate-950');
+      if (k === 'j') updateBadge('k_j', true, 'bg-yellow-400 text-slate-950');
+      if (k === 'z') updateBadge('k_z', true, 'bg-yellow-400 text-slate-950');
+      if (k === 'k') updateBadge('k_k', true, 'bg-pink-500 text-white');
+      if (k === 'x') updateBadge('k_x', true, 'bg-pink-500 text-white');
+      if (k === 'l') updateBadge('k_l', true, 'bg-red-500 text-white');
+      if (k === 'c') updateBadge('k_c', true, 'bg-red-500 text-white');
+
+      if ((e.key === ' ' || k === 'w' || k === 'arrowup') && p1.jumpsLeft > 0) {
+        p1.vy = -540;
+        p1.jumpsLeft--;
+        p1.isGrounded = false;
+        playSfx('fire');
+      }
+
+      if (k === 'j' || k === 'z') {
+        doAttack(p1, 'jab');
+      }
+      if (k === 'k' || k === 'x') {
+        doAttack(p1, 'smash');
+      }
+      if (k === 'l' || k === 'c') {
+        doFireball(p1);
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase();
+      const code = e.code;
+
+      keys[k] = false;
+      keys[code] = false;
+
+      if (k === 'a') updateBadge('k_a', false);
+      if (k === 'd') updateBadge('k_d', false);
+      if (k === 'arrowleft') updateBadge('k_left', false);
+      if (k === 'arrowright') updateBadge('k_right', false);
+      if (k === 'w') updateBadge('k_w', false);
+      if (k === ' ' || code === 'Space') updateBadge('k_space', false);
+      if (k === 'j') updateBadge('k_j', false);
+      if (k === 'z') updateBadge('k_z', false);
+      if (k === 'k') updateBadge('k_k', false);
+      if (k === 'x') updateBadge('k_x', false);
+      if (k === 'l') updateBadge('k_l', false);
+      if (k === 'c') updateBadge('k_c', false);
+    });
+
+    function doAttack(f, type) {
+      if (f.isAttacking) return;
+      f.isAttacking = true;
+      f.attackType = type;
+      f.attackTimer = type === 'smash' ? 0.35 : 0.2;
+      playSfx(type);
+
+      // Check hit opponent
+      const opponent = f === p1 ? cpu : p1;
+      const attackRange = type === 'smash' ? 65 : 45;
+      const reachX = f.x + (f.facing * attackRange);
+
+      if (Math.abs(reachX - opponent.x) < 50 && Math.abs(f.y - opponent.y) < 45) {
+        // Hit connected!
+        const baseDmg = type === 'smash' ? 18 : 8;
+        opponent.damage += baseDmg;
+        addHitParticle(opponent.x + opponent.w / 2, opponent.y + opponent.h / 2);
+
+        // Knockback scaling with damage percentage!
+        const knockback = (type === 'smash' ? 450 : 250) * (1 + opponent.damage / 80);
+        opponent.vx = f.facing * knockback;
+        opponent.vy = -(knockback * 0.7);
+        opponent.isGrounded = false;
+        playSfx('hit');
+      }
+    }
+
+    function doFireball(f) {
+      playSfx('fire');
+      projectiles.push({
+        x: f.x + (f.facing === 1 ? f.w + 5 : -15),
+        y: f.y + 20,
+        vx: f.facing * 420,
+        vy: 0,
+        owner: f,
+        life: 1.2
+      });
+    }
+
+    function respawnFighter(f, startX) {
+      f.stocks--;
+      playSfx('ko');
+      addHitParticle(f.x, f.y);
+
+      if (f.stocks <= 0) {
+        endMatch(f === p1 ? 'CPU LINK WINS!' : 'P1 MARIO WINS!');
+        return;
+      }
+
+      f.x = startX;
+      f.y = 120;
+      f.vx = 0;
+      f.vy = 0;
+      f.damage = 0;
+      f.jumpsLeft = 2;
+      f.invincibleTimer = 2.0;
+    }
+
+    function endMatch(msg) {
+      document.getElementById('victoryOverlay').classList.remove('hidden');
+      document.getElementById('vicDesc').innerText = msg;
+    }
+
+    window.restartMatch = function() {
+      document.getElementById('victoryOverlay').classList.add('hidden');
+      p1 = createFighter(300, 200, false, '#dc2626', 'Mario');
+      cpu = createFighter(580, 200, true, '#10b981', 'Link');
+    };
+
+    let lastTime = performance.now();
+
+    function updateFighter(f, dt) {
+      // Invincibility
+      if (f.invincibleTimer > 0) f.invincibleTimer -= dt;
+
+      // Attacks
+      if (f.isAttacking) {
+        f.attackTimer -= dt;
+        if (f.attackTimer <= 0) f.isAttacking = false;
+      }
+
+      // Player Movement
+      if (!f.isCpu) {
+        const moveLeft = keys['a'] || keys['arrowleft'];
+        const moveRight = keys['d'] || keys['arrowright'];
+
+        if (moveLeft) {
+          f.vx = -280;
+          f.facing = -1;
+        } else if (moveRight) {
+          f.vx = 280;
+          f.facing = 1;
+        } else {
+          f.vx *= 0.8;
+        }
+      } else {
+        // CPU AI
+        const distToP1 = p1.x - f.x;
+        const absDist = Math.abs(distToP1);
+
+        if (f.y > 380 && f.jumpsLeft > 0) {
+          // Off-stage recovery jump
+          f.vy = -540;
+          f.jumpsLeft--;
+          f.vx = distToP1 > 0 ? 250 : -250;
+        } else if (absDist > 55) {
+          f.vx = distToP1 > 0 ? 210 : -210;
+          f.facing = distToP1 > 0 ? 1 : -1;
+        } else {
+          f.vx *= 0.7;
+          if (Math.random() < 0.05 && !f.isAttacking) {
+            doAttack(f, Math.random() > 0.4 ? 'jab' : 'smash');
+          }
+        }
+      }
+
+      // Apply Gravity
+      f.vy += 1200 * dt;
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+
+      // Platform Collision
+      f.isGrounded = false;
+      platforms.forEach(plat => {
+        if (f.vy >= 0 && f.y + f.h >= plat.y && f.y + f.h <= plat.y + plat.h + 15) {
+          if (f.x + f.w > plat.x && f.x < plat.x + plat.w) {
+            f.y = plat.y - f.h;
+            f.vy = 0;
+            f.isGrounded = true;
+            f.jumpsLeft = 2;
+          }
+        }
+      });
+
+      // Blast zone check
+      if (f.x < BLAST_LEFT || f.x > BLAST_RIGHT || f.y < BLAST_TOP || f.y > BLAST_BOTTOM) {
+        respawnFighter(f, f === p1 ? 300 : 580);
+      }
+    }
+
+    function update(dt) {
+      updateFighter(p1, dt);
+      updateFighter(cpu, dt);
+
+      // Projectiles
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.vx * dt;
+        p.life -= dt;
+
+        const target = p.owner === p1 ? cpu : p1;
+        if (Math.abs(p.x - (target.x + target.w / 2)) < 25 && Math.abs(p.y - (target.y + target.h / 2)) < 30) {
+          target.damage += 10;
+          target.vx = (p.vx > 0 ? 1 : -1) * 220;
+          target.vy = -180;
+          addHitParticle(p.x, p.y);
+          playSfx('hit');
+          projectiles.splice(i, 1);
+          continue;
+        }
+        if (p.life <= 0) projectiles.splice(i, 1);
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx * dt;
+        pt.y += pt.vy * dt;
+        pt.life -= dt;
+        if (pt.life <= 0) particles.splice(i, 1);
+      }
+
+      // Update UI percent
+      const p1El = document.getElementById('p1Percent');
+      p1El.innerText = `${Math.round(p1.damage)}%`;
+      p1El.style.color = p1.damage > 100 ? '#ef4444' : p1.damage > 50 ? '#f59e0b' : '#ffffff';
+
+      const cpuEl = document.getElementById('cpuPercent');
+      cpuEl.innerText = `${Math.round(cpu.damage)}%`;
+      cpuEl.style.color = cpu.damage > 100 ? '#ef4444' : cpu.damage > 50 ? '#f59e0b' : '#ffffff';
+
+      document.getElementById('p1Stocks').innerText = '🔴 '.repeat(p1.stocks);
+      document.getElementById('cpuStocks').innerText = '🟢 '.repeat(cpu.stocks);
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Nebula / Outer Space Background (Sector Z)
+      const grad = ctx.createRadialGradient(450, 250, 50, 450, 250, 450);
+      grad.addColorStop(0, '#1e1b4b');
+      grad.addColorStop(1, '#020617');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Distant stars
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 40; i++) {
+        const sx = (i * 97) % canvas.width;
+        const sy = (i * 71) % canvas.height;
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+      }
+
+      // Draw Platforms
+      platforms.forEach(plat => {
+        if (plat.type === 'main') {
+          // Floating space island
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+          ctx.fillStyle = '#10b981'; // Green grass top
+          ctx.fillRect(plat.x, plat.y, plat.w, 5);
+
+          // Island bottom rocky cone
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.moveTo(plat.x + 20, plat.y + plat.h);
+          ctx.lineTo(plat.x + plat.w - 20, plat.y + plat.h);
+          ctx.lineTo(plat.x + plat.w / 2, plat.y + plat.h + 80);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Soft floating platforms
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(plat.x, plat.y, plat.w, 2);
+        }
+      });
+
+      // Draw Projectiles (Fireballs)
+      projectiles.forEach(p => {
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Fighters
+      drawFighter(p1);
+      drawFighter(cpu);
+
+      // Draw Particles
+      particles.forEach(pt => {
+        ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x, pt.y, 3, 3);
+      });
+    }
+
+    function drawFighter(f) {
+      ctx.save();
+      ctx.translate(f.x + f.w / 2, f.y + f.h / 2);
+      ctx.scale(f.facing, 1);
+
+      // Flashing if invincible
+      if (f.invincibleTimer > 0 && Math.floor(Date.now() / 80) % 2 === 0) {
+        ctx.globalAlpha = 0.4;
+      }
+
+      // Fighter Body
+      ctx.fillStyle = f.color;
+      ctx.fillRect(-15, -20, 30, 35); // Torso
+
+      // Head
+      ctx.fillStyle = '#fcd34d';
+      ctx.beginPath();
+      ctx.arc(0, -26, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cap / Hat
+      ctx.fillStyle = f.color;
+      ctx.fillRect(-12, -36, 24, 8);
+      ctx.fillRect(0, -32, 16, 4); // Visor
+
+      // Attack fist / Sword slash visual
+      if (f.isAttacking) {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(22, -10, f.attackType === 'smash' ? 20 : 12, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Legs
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(-12, 15, 10, 14);
+      ctx.fillRect(2, 15, 10, 14);
+
+      ctx.restore();
+    }
+
+    function gameLoop(now) {
+      requestAnimationFrame(gameLoop);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      update(dt);
+      render();
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

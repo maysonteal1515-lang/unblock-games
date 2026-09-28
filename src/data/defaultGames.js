@@ -1,5 +1,89 @@
 export const INITIAL_GAMES = [
   {
+    id: "sm64-3d",
+    title: "Super Mario 64 (3D Web Edition)",
+    category: "N64",
+    description: "Interactive 3D WebGL edition of Super Mario 64. Explore Peach's Castle courtyard, double jump, triple somersault, and gather the 8 Red Coins!",
+    iframeUrl: "./games/sm64.html",
+    aspectRatio: "16:9",
+    badge: "3D Classic",
+    accentColor: "#ef4444",
+    controls: ["WASD / Arrow Keys to run", "Space / X to Jump (Double & Triple Jump)", "Z / Shift to Ground Pound", "C / Enter to Punch", "Drag mouse / Q & E to rotate camera"],
+    tags: ["N64", "Mario", "3D", "Platformer", "Nintendo"]
+  },
+  {
+    id: "n64-mariokart",
+    title: "Mario Kart 64",
+    category: "N64",
+    description: "Drift across Luigi Raceway, dodge red spiny shells, and race with Mario, Luigi, Bowser, Peach, and Yoshi.",
+    iframeUrl: "./games/mariokart64.html",
+    aspectRatio: "16:9",
+    badge: "N64 Racing",
+    accentColor: "#f97316",
+    controls: ["W / Up: Accelerate", "S / Down: Brake", "A / D: Steer", "Space: Use Item", "Shift: Power Slide / Drift"],
+    tags: ["N64", "Racing", "Kart", "Multiplayer", "Nintendo"]
+  },
+  {
+    id: "n64-smash",
+    title: "Super Smash Bros",
+    category: "N64",
+    description: "The original 4-player brawler where Nintendo icons clash! Battle Mario vs Link with damage percentages, smash attacks, and blast zones.",
+    iframeUrl: "./games/smash.html",
+    aspectRatio: "16:9",
+    badge: "N64 Brawler",
+    accentColor: "#ec4899",
+    controls: ["A / D: Move", "W / Space: Double Jump", "J / Z: Jab Attack", "K / X: Smash Attack", "L / C: Fireball Projectile"],
+    tags: ["N64", "Fighting", "Smash", "Brawler", "Nintendo"]
+  },
+  {
+    id: "n64-zelda",
+    title: "The Legend of Zelda: Ocarina of Time",
+    category: "N64",
+    description: "Explore the Great Deku Tree as Link! Slay Stalfos, gather Rupees and Dungeon Keys, and claim the Sacred Spiritual Stone.",
+    iframeUrl: "./games/zelda.html",
+    aspectRatio: "16:10",
+    badge: "Masterpiece",
+    accentColor: "#10b981",
+    controls: ["WASD / Arrows: Move Link", "Space / X: Master Sword Slash", "Shift / Z: Hylian Shield", "Defeat enemies to unlock the Master Chest!"],
+    tags: ["N64", "Zelda", "RPG", "Adventure", "Fantasy"]
+  },
+  {
+    id: "n64-starfox",
+    title: "Star Fox 64",
+    category: "N64",
+    description: "Do a barrel roll! Pilot the Arwing starfighter through Corneria space combat, fire dual plasma lasers, and launch Nova Bombs.",
+    iframeUrl: "./games/starfox.html",
+    aspectRatio: "16:9",
+    badge: "N64 Shooter",
+    accentColor: "#06b6d4",
+    controls: ["WASD / Arrows: Fly Arwing", "Space / X: Dual Lasers", "Q / E: Barrel Roll (Deflects Lasers!)", "Shift / Z: Smart Nova Bomb"],
+    tags: ["N64", "Sci-Fi", "Shooter", "Fox", "Space"]
+  },
+  {
+    id: "n64-goldeneye",
+    title: "GoldenEye 007",
+    category: "N64",
+    description: "Infiltrate the Soviet Chemical Warfare Facility with James Bond. Wield the Silenced PP7, eliminate sentries, and complete your MI6 mission.",
+    iframeUrl: "./games/goldeneye.html",
+    aspectRatio: "16:10",
+    badge: "N64 Stealth",
+    accentColor: "#64748b",
+    controls: ["WASD: Move & Strafe", "Mouse / Arrows: Aim Crosshairs", "Click / Space: Fire Silenced PP7", "R: Reload Magazine"],
+    tags: ["N64", "FPS", "Shooter", "Stealth", "Action"]
+  },
+  {
+    id: "n64-player",
+    title: "Universal N64 ROM Emulator",
+    category: "N64",
+    description: "High-performance Nintendo 64 WebAssembly Emulator. Drag & drop or upload any .z64 or .n64 game file to play instantly with full controller mapping!",
+    iframeUrl: "./games/n64-player.html",
+    aspectRatio: "4:3",
+    badge: "Universal Runner",
+    accentColor: "#8b5cf6",
+    controls: ["Drag & drop any .z64/.n64 file", "Gamepad & Keyboard mapping", "Save states supported"],
+    tags: ["N64", "Emulator", "ROMs", "Custom"]
+  },
+  {
     id: "2048",
     title: "2048",
     category: "Puzzle",
@@ -13,7 +97,7 @@ export const INITIAL_GAMES = [
   },
   {
     id: "snake",
-    title: "Retro Snake",
+    "title": "Retro Snake",
     category: "Arcade",
     description: "Classic 90s Nokia-style snake game. Gobble red pellets, grow longer, and avoid walls.",
     iframeUrl: "./games/snake.html",
