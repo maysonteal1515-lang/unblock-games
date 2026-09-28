@@ -44,8 +44,18 @@ export const GamePlayer = ({
     setReloadKey(prev => prev + 1);
   };
 
+  const resolveGameUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const clean = url.replace(/^(\.\/|\/)/, '');
+    const base = import.meta.env.BASE_URL || './';
+    return `${base}${clean}`;
+  };
+
   const handleOpenExternal = () => {
-    window.open(game.iframeUrl, '_blank', 'noopener,noreferrer');
+    window.open(resolveGameUrl(game.iframeUrl), '_blank', 'noopener,noreferrer');
   };
 
   const getAspectRatioClass = () => {
@@ -146,7 +156,7 @@ export const GamePlayer = ({
         <div className={`transition-all duration-200 ${getAspectRatioClass()} relative flex items-center justify-center bg-slate-950`}>
           <iframe
             key={reloadKey}
-            src={game.iframeUrl}
+            src={resolveGameUrl(game.iframeUrl)}
             title={game.title}
             className="w-full h-full border-0 select-none"
             allow="autoplay; fullscreen; gamepad; focus-without-user-activation; clipboard-read; clipboard-write"
