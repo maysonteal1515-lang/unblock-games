@@ -1,0 +1,110 @@
+[
+  {
+    "id": "2048",
+    "title": "2048",
+    "category": "Puzzle",
+    "description": "Join numerical tiles in powers of two to reach the legendary 2048 tile!",
+    "iframeUrl": "./games/2048.html",
+    "aspectRatio": "1:1",
+    "badge": "Popular",
+    "accentColor": "#f59e0b",
+    "controls": ["Arrow Keys or WASD to slide tiles", "Mobile: Swipe in any direction"],
+    "tags": ["Numbers", "Merge", "Puzzle", "Logic"]
+  },
+  {
+    "id": "snake",
+    "title": "Retro Snake",
+    "category": "Arcade",
+    "description": "Classic 90s Nokia-style snake game. Gobble red pellets, grow longer, and avoid walls.",
+    "iframeUrl": "./games/snake.html",
+    "aspectRatio": "1:1",
+    "badge": "Retro Classic",
+    "accentColor": "#10b981",
+    "controls": ["Arrow Keys / WASD to steer", "On-screen directional buttons"],
+    "tags": ["Retro", "Classic", "Arcade", "High Score"]
+  },
+  {
+    "id": "flappy",
+    "title": "Flappy Pixel",
+    "category": "Arcade",
+    "description": "Navigate your fluttering bird through tight gaps between endless green pipes.",
+    "iframeUrl": "./games/flappy.html",
+    "aspectRatio": "3:4",
+    "badge": "Challenging",
+    "accentColor": "#eab308",
+    "controls": ["Spacebar, Up Arrow, or Click to flap wings"],
+    "tags": ["Physics", "Endless", "Tap", "Skill"]
+  },
+  {
+    "id": "tetris",
+    "title": "Tetra Blocks",
+    "category": "Puzzle",
+    "description": "Drop, rotate, and clear complete rows with classic 7-tetromino falling blocks.",
+    "iframeUrl": "./games/tetris.html",
+    "aspectRatio": "4:3",
+    "badge": "All-Time Best",
+    "accentColor": "#06b6d4",
+    "controls": ["Arrow Keys: Left/Right to move, Up to rotate, Down for soft drop", "Spacebar: Instant hard drop"],
+    "tags": ["Blocks", "Lines", "Puzzle", "Classic"]
+  },
+  {
+    "id": "breakout",
+    "title": "Breakout DX",
+    "category": "Arcade",
+    "description": "Smash vibrant brick walls with bouncing balls and precision paddle maneuvers.",
+    "iframeUrl": "./games/breakout.html",
+    "aspectRatio": "4:3",
+    "badge": "Action",
+    "accentColor": "#ec4899",
+    "controls": ["Mouse or Left/Right Arrows / A & D to steer paddle"],
+    "tags": ["Bricks", "Paddle", "Arcade", "Action"]
+  },
+  {
+    "id": "galaxy-invaders",
+    "title": "Galaxy Defender",
+    "category": "Action",
+    "description": "Command your starship, dodge alien plasma lasers, and obliterate descending alien fleets.",
+    "iframeUrl": "./games/space-invaders.html",
+    "aspectRatio": "1:1",
+    "badge": "Sci-Fi",
+    "accentColor": "#38bdf8",
+    "controls": ["Left/Right Arrow or A/D to steer", "Spacebar to shoot lasers"],
+    "tags": ["Space", "Shooter", "Sci-Fi", "Aliens"]
+  },
+  {
+    "id": "pong",
+    "title": "Pong DX",
+    "category": "Sports",
+    "description": "The grandfather of video games. Challenge the CPU or play head-to-head with a friend.",
+    "iframeUrl": "./games/pong.html",
+    "aspectRatio": "16:10",
+    "badge": "2-Player",
+    "accentColor": "#14b8a6",
+    "controls": ["Player 1: W/S or Mouse", "Player 2: Up/Down Arrow keys"],
+    "tags": ["2-Player", "Sports", "Table Tennis", "Retro"]
+  },
+  {
+    "id": "dino",
+    "title": "T-Rex Dino Runner",
+    "category": "Arcade",
+    "description": "Endless prehistoric sprint! Leap over desert cacti and duck underneath flying pterodactyls.",
+    "iframeUrl": "./games/dino.html",
+    "aspectRatio": "16:9",
+    "badge": "Offline Classic",
+    "accentColor": "#f97316",
+    "controls": ["Spacebar or Up Arrow to jump", "Click or tap screen"],
+    "tags": ["Runner", "Dino", "Pixel", "Offline"]
+  },
+  {
+    "id": "minesweeper",
+    "title": "Retro Minesweeper",
+    "category": "Puzzle",
+    "description": "Uncover numbers, deduce safe grid sectors, and place flags on hidden explosive mines.",
+    "iframeUrl": "./games/minesweeper.html",
+    "aspectRatio": "1:1",
+    "badge": "Brain",
+    "accentColor": "#ef4444",
+    "controls": ["Left Click to reveal safe tile", "Right Click or Long Press to place flag 🚩"],
+    "tags": ["Logic", "Mines", "Strategy", "Classic"]
+  }
+]

@@ -9,10 +9,926 @@
     <meta property="og:description" content="Fast, unblocked browser games player with JSON iframe catalog, fullscreen support, and custom game integration." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Tailwind CSS CDN for instant, zero-build rendering on GitHub Pages -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      /* Custom scrollbar styling */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #090d16; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #334155; }
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
+  <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Emergency Panic Cloak Overlay (Google Docs Disguise) -->
+    <div id="panicCloak" class="fixed inset-0 z-50 bg-[#f8f9fa] text-gray-800 font-sans flex-col select-text hidden">
+      <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="p-1.5 bg-blue-600 text-white rounded">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-900 text-sm">AP World History - Unit 4 Study Notes</span>
+              <span class="text-xs text-gray-500">Last edit was 2 minutes ago</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-600 mt-0.5">
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">File</span>
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">Edit</span>
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">View</span>
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">Insert</span>
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">Format</span>
+              <span class="hover:bg-gray-100 px-1 py-0.5 rounded cursor-pointer">Tools</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="exitCloakBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Return to Vault (Esc)</span>
+          </button>
+          <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">S</div>
+        </div>
+      </header>
+      <div class="flex-1 overflow-y-auto p-8 flex justify-center bg-[#f1f3f4]">
+        <div class="w-full max-w-3xl bg-white shadow-sm border border-gray-200 p-12 min-h-[900px] text-gray-800">
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Unit 4: Transoceanic Interconnections (c. 1450 - c. 1750)</h1>
+          <p class="text-sm text-gray-500 mb-6">Course: Advanced Social Studies · Semester 2 Overview</p>
+          <div class="space-y-4 text-sm leading-relaxed text-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 border-b pb-1">1. Technological Innovations in Navigation</h2>
+            <p>Cross-cultural interactions resulted in the diffusion of technology and facilitated changes in patterns of trade and travel from 1450 to 1750.</p>
+            <ul class="list-disc pl-6 space-y-1">
+              <li><strong>Astrolabe & Caravel:</strong> Enabled sailors to determine latitude and sail against wind currents.</li>
+              <li><strong>Magnetic Compass:</strong> Adopted from Chinese maritime explorers, facilitating open-ocean travel.</li>
+            </ul>
+            <h2 class="text-lg font-semibold text-gray-900 border-b pb-1 pt-4">2. The Columbian Exchange</h2>
+            <p>The new global circulation of goods was facilitated by royal chartered European monopoly companies that took silver from Spanish colonies in the Americas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <!-- Logo / Brand -->
+        <div id="brandLogo" class="flex items-center gap-2.5 cursor-pointer shrink-0 select-none group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-cyan-900/20 group-hover:scale-105 transition-transform">
+            <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+          </div>
+          <span class="text-lg font-bold tracking-tight text-white">UnblockVault</span>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav id="navTabs" class="hidden md:flex items-center gap-1 overflow-x-auto py-1">
+          <!-- Populated by JS -->
+        </nav>
+
+        <!-- Right Header Action Tools -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="cloakBtn" title="Emergency Panic Button (Disguises screen as study notes)" class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-colors whitespace-nowrap">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Panic Cloak</span>
+          </button>
+
+          <button id="openJsonBtn" title="Inspect or edit games.json" class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors whitespace-nowrap">
+            <i data-lucide="code" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span class="hidden sm:inline">JSON Catalog</span>
+          </button>
+
+          <button id="openAddModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-cyan-500/20">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Game</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full">
+      <!-- Player View (hidden by default) -->
+      <div id="playerView" class="hidden max-w-6xl mx-auto px-4 py-6 flex-col gap-6">
+        <!-- Player Controls Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+          <div class="flex items-center gap-3">
+            <button id="backToCatalogBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+              <span>Library</span>
+            </button>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="playerGameTitle" class="text-base font-bold text-white">Game Title</h2>
+                <span id="playerGameCategory" class="text-xs text-slate-500 font-medium">· Category</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="playerFavBtn" title="Toggle Favorite" class="p-2 rounded-lg text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+              <i data-lucide="star" class="w-4 h-4"></i>
+            </button>
+            <button id="playerTheaterBtn" title="Toggle Theater Mode" class="p-2 rounded-lg text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+              <i data-lucide="tv" class="w-4 h-4"></i>
+            </button>
+            <button id="playerReloadBtn" title="Reload Game Frame" class="p-2 text-slate-400 hover:text-slate-200 bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+            <button id="playerExternalBtn" title="Open in New Window" class="p-2 text-slate-400 hover:text-slate-200 bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </button>
+            <button id="playerFullscreenBtn" title="Full Screen Mode" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-semibold rounded-lg transition-colors">
+              <i data-lucide="maximize-2" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Fullscreen</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Iframe Canvas -->
+        <div id="playerContainer" class="flex flex-col items-center justify-center bg-black rounded-2xl border border-slate-800 overflow-hidden relative shadow-2xl">
+          <div id="iframeWrapper" class="w-full max-w-4xl h-[620px] relative flex items-center justify-center bg-slate-950 transition-all duration-200">
+            <iframe id="gameIframe" class="w-full h-full border-0 select-none" allow="autoplay; fullscreen; gamepad; focus-without-user-activation; clipboard-read; clipboard-write" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"></iframe>
+          </div>
+        </div>
+
+        <!-- Details & Controls Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900/60 border border-slate-800/80 rounded-xl p-6">
+          <div class="md:col-span-2 space-y-4">
+            <div>
+              <h3 id="aboutGameTitle" class="text-sm font-semibold text-slate-200">About this game</h3>
+              <p id="aboutGameDesc" class="text-xs text-slate-400 mt-1 leading-relaxed"></p>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold text-slate-300 mb-2">Controls & Guide</h4>
+              <div id="aboutGameControls" class="space-y-1.5 text-xs text-slate-400"></div>
+            </div>
+          </div>
+          <div class="border-t md:border-t-0 md:border-l border-slate-800 md:pl-6 space-y-3">
+            <h4 class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="gamepad-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span>Quick Launch</span>
+            </h4>
+            <div id="quickLaunchList" class="flex flex-col gap-1.5"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Library / Catalog View -->
+      <div id="libraryView" class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <!-- Hero Section -->
+        <div class="mb-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="max-w-xl">
+            <div class="flex items-center gap-2 text-xs font-semibold text-cyan-400 mb-2">
+              <i data-lucide="gamepad-2" class="w-4 h-4"></i>
+              <span>UNBLOCKED BROWSER ARCADE</span>
+              <span class="text-slate-600">·</span>
+              <span class="text-slate-400">Stored via JSON</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              High-speed, unblocked games running anywhere.
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
+              Every game runs seamlessly inside a responsive sandbox iframe. Store, add, or download the full games catalog through the built-in <code class="text-cyan-300 font-mono text-xs">games.json</code> manager.
+            </p>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <button id="randomPlayBtn" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl transition-all shadow-sm">
+              <i data-lucide="shuffle" class="w-4 h-4 text-cyan-400"></i>
+              <span>Random Game</span>
+            </button>
+            <button id="heroAddBtn" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-xl transition-all shadow-md shadow-cyan-500/20">
+              <span>+ Custom Iframe</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input type="text" id="searchInput" placeholder="Search games, tags, or categories..." class="w-full pl-10 pr-4 py-2 text-xs bg-slate-900 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors" />
+          </div>
+          <div class="flex items-center gap-3 justify-between sm:justify-end text-xs text-slate-400">
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500">Sort:</span>
+              <select id="sortSelect" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500">
+                <option value="featured">Featured</option>
+                <option value="az">Alphabetical (A-Z)</option>
+                <option value="category">Category</option>
+              </select>
+            </div>
+            <div id="gameCountBadge" class="font-mono text-xs text-slate-500 tabular-nums">0 games</div>
+          </div>
+        </div>
+
+        <!-- Games Grid -->
+        <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden p-12 text-center bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center">
+          <i data-lucide="gamepad-2" class="w-10 h-10 text-slate-600 mb-3"></i>
+          <h3 class="text-base font-semibold text-slate-300">No games found</h3>
+          <p class="text-xs text-slate-500 mt-1 max-w-sm">Try clearing your search query or switching categories.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-6 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-slate-400">UnblockVault</span>
+          <span>·</span>
+          <span>Client-side iframe runner & JSON catalog</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="footerExportJsonBtn" class="hover:text-cyan-400 transition-colors">Export games.json</button>
+          <span>·</span>
+          <button id="footerPanicBtn" class="hover:text-amber-400 transition-colors">Panic Mode (Esc)</button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Add Game Modal -->
+    <div id="addGameModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto hidden">
+      <div class="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 overflow-hidden">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-white">Add Game to JSON</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Embed any web game via iframe source or HTML code</p>
+          </div>
+          <button id="closeAddModalBtn" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form id="addGameForm" class="mt-4 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Game Title *</label>
+            <input type="text" id="addTitle" required placeholder="e.g. Super Hexagon, Slope" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+              <select id="addCategory" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500">
+                <option value="Arcade">Arcade</option>
+                <option value="Puzzle">Puzzle</option>
+                <option value="Action">Action</option>
+                <option value="Sports">Sports</option>
+                <option value="Classic">Classic</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Aspect Ratio</label>
+              <select id="addAspect" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500">
+                <option value="16:9">16:9 (Widescreen)</option>
+                <option value="4:3">4:3 (Standard)</option>
+                <option value="1:1">1:1 (Square)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Iframe URL or &lt;iframe&gt; code *</label>
+            <input type="text" id="addUrl" required placeholder="./games/yourgame.html or https://..." class="w-full px-3 py-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Short Description</label>
+            <input type="text" id="addDesc" placeholder="1-sentence description" class="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+            <button type="button" id="cancelAddBtn" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 rounded-lg">Cancel</button>
+            <button type="submit" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg shadow-sm shadow-cyan-500/20">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Add to Games Catalog</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- JSON Catalog Modal -->
+    <div id="jsonModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs hidden">
+      <div class="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 flex flex-col max-h-[85vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-white">games.json Storage Manager</h3>
+            <p class="text-xs text-slate-400 mt-0.5">All games and their iframes are stored as JSON.</p>
+          </div>
+          <button id="closeJsonModalBtn" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div id="jsonStatus" class="hidden mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2"></div>
+        <div class="mt-3 flex-1 min-h-[300px] flex flex-col">
+          <textarea id="jsonEditor" spellcheck="false" class="flex-1 w-full p-3 font-mono text-xs text-cyan-300 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-cyan-500 resize-none leading-relaxed"></textarea>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <button id="copyJsonBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy JSON</span>
+            </button>
+            <button id="downloadJsonBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Download File</span>
+            </button>
+            <button id="resetJsonBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-400 bg-slate-800/40 rounded-lg transition-colors">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Defaults</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="closeJsonFooterBtn" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 rounded-lg">Close</button>
+            <button id="applyJsonBtn" class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg shadow-sm shadow-cyan-500/20">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Apply Changes</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Script (Zero-build, Vanilla JS) -->
+    <script>
+      // Embedded initial catalog as robust fallback
+      const DEFAULT_GAMES = [
+        {
+          id: "2048",
+          title: "2048",
+          category: "Puzzle",
+          description: "Join numerical tiles in powers of two to reach the legendary 2048 tile!",
+          iframeUrl: "./games/2048.html",
+          aspectRatio: "1:1",
+          badge: "Popular",
+          accentColor: "#f59e0b",
+          controls: ["Arrow Keys or WASD to slide tiles", "Mobile: Swipe in any direction"],
+          tags: ["Numbers", "Merge", "Puzzle"]
+        },
+        {
+          id: "snake",
+          title: "Retro Snake",
+          category: "Arcade",
+          description: "Classic 90s Nokia-style snake game. Gobble red pellets, grow longer, and avoid walls.",
+          iframeUrl: "./games/snake.html",
+          aspectRatio: "1:1",
+          badge: "Retro Classic",
+          accentColor: "#10b981",
+          controls: ["Arrow Keys / WASD to steer", "On-screen directional buttons"],
+          tags: ["Retro", "Classic", "Arcade"]
+        },
+        {
+          id: "flappy",
+          title: "Flappy Pixel",
+          category: "Arcade",
+          description: "Navigate your fluttering bird through tight gaps between endless green pipes.",
+          iframeUrl: "./games/flappy.html",
+          aspectRatio: "3:4",
+          badge: "Challenging",
+          accentColor: "#eab308",
+          controls: ["Spacebar, Up Arrow, or Click to flap wings"],
+          tags: ["Physics", "Endless", "Skill"]
+        },
+        {
+          id: "tetris",
+          title: "Tetra Blocks",
+          category: "Puzzle",
+          description: "Drop, rotate, and clear complete rows with classic 7-tetromino falling blocks.",
+          iframeUrl: "./games/tetris.html",
+          aspectRatio: "4:3",
+          badge: "All-Time Best",
+          accentColor: "#06b6d4",
+          controls: ["Arrow Keys: Move/Rotate/Drop", "Spacebar: Instant drop"],
+          tags: ["Blocks", "Lines", "Puzzle"]
+        },
+        {
+          id: "breakout",
+          title: "Breakout DX",
+          category: "Arcade",
+          description: "Smash vibrant brick walls with bouncing balls and precision paddle maneuvers.",
+          iframeUrl: "./games/breakout.html",
+          aspectRatio: "4:3",
+          badge: "Action",
+          accentColor: "#ec4899",
+          controls: ["Mouse or Left/Right Arrows to steer paddle"],
+          tags: ["Bricks", "Paddle", "Arcade"]
+        },
+        {
+          id: "galaxy-invaders",
+          title: "Galaxy Defender",
+          category: "Action",
+          description: "Command your starship, dodge alien plasma lasers, and obliterate descending alien fleets.",
+          iframeUrl: "./games/space-invaders.html",
+          aspectRatio: "1:1",
+          badge: "Sci-Fi",
+          accentColor: "#38bdf8",
+          controls: ["Left/Right Arrow or A/D to steer", "Spacebar to shoot lasers"],
+          tags: ["Space", "Shooter", "Aliens"]
+        },
+        {
+          id: "pong",
+          title: "Pong DX",
+          category: "Sports",
+          description: "The grandfather of video games. Challenge the CPU or play head-to-head with a friend.",
+          iframeUrl: "./games/pong.html",
+          aspectRatio: "16:10",
+          badge: "2-Player",
+          accentColor: "#14b8a6",
+          controls: ["Player 1: W/S or Mouse", "Player 2: Up/Down Arrow keys"],
+          tags: ["2-Player", "Sports", "Retro"]
+        },
+        {
+          id: "dino",
+          title: "T-Rex Dino Runner",
+          category: "Arcade",
+          description: "Endless prehistoric sprint! Leap over desert cacti and duck underneath flying pterodactyls.",
+          iframeUrl: "./games/dino.html",
+          aspectRatio: "16:9",
+          badge: "Offline Classic",
+          accentColor: "#f97316",
+          controls: ["Spacebar or Up Arrow to jump", "Click or tap screen"],
+          tags: ["Runner", "Dino", "Pixel"]
+        },
+        {
+          id: "minesweeper",
+          title: "Retro Minesweeper",
+          category: "Puzzle",
+          description: "Uncover numbers, deduce safe grid sectors, and place flags on hidden explosive mines.",
+          iframeUrl: "./games/minesweeper.html",
+          aspectRatio: "1:1",
+          badge: "Brain",
+          accentColor: "#ef4444",
+          controls: ["Left Click to reveal safe tile", "Right Click or Long Press to place flag 🚩"],
+          tags: ["Logic", "Mines", "Strategy"]
+        }
+      ];
+
+      // Application State
+      let games = [];
+      let favorites = [];
+      let currentCategory = 'all';
+      let searchQuery = '';
+      let sortBy = 'featured';
+      let activeGame = null;
+      let isCloaked = false;
+      let isTheater = false;
+
+      // Safe URL Resolver for GitHub Pages subpaths
+      function resolveUrl(url) {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+        // Clean leading slashes
+        const clean = url.replace(/^(\.\/|\/)/, '');
+        return './' + clean;
+      }
+
+      // Initialize Data
+      function initData() {
+        try {
+          const savedFavs = localStorage.getItem('unblock_favorites');
+          favorites = savedFavs ? JSON.parse(savedFavs) : ['2048', 'snake'];
+        } catch (e) {
+          favorites = ['2048', 'snake'];
+        }
+
+        try {
+          const savedCatalog = localStorage.getItem('unblock_games_catalog');
+          if (savedCatalog) {
+            const parsed = JSON.parse(savedCatalog);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              games = parsed;
+              render();
+              return;
+            }
+          }
+        } catch (e) {}
+
+        // Fetch games.json if available, or fall back to default
+        fetch('./games.json')
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              games = data;
+            } else {
+              games = DEFAULT_GAMES;
+            }
+            render();
+          })
+          .catch(() => {
+            games = DEFAULT_GAMES;
+            render();
+          });
+      }
+
+      function saveCatalog() {
+        localStorage.setItem('unblock_games_catalog', JSON.stringify(games));
+      }
+
+      function saveFavorites() {
+        localStorage.setItem('unblock_favorites', JSON.stringify(favorites));
+      }
+
+      // Render Navigation Tabs
+      function renderNav() {
+        const nav = document.getElementById('navTabs');
+        const categories = [
+          { id: 'all', label: 'All Games' },
+          { id: 'Arcade', label: 'Arcade' },
+          { id: 'Puzzle', label: 'Puzzle' },
+          { id: 'Action', label: 'Action' },
+          { id: 'Sports', label: 'Sports' },
+          { id: 'favorites', label: `Favorites (${favorites.length})` }
+        ];
+
+        nav.innerHTML = categories.map(cat => {
+          const isActive = currentCategory === cat.id;
+          return `
+            <button onclick="setCategory('${cat.id}')" class="px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+              isActive
+                ? 'bg-slate-800 text-cyan-400 border border-slate-700/80 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }">
+              ${cat.label}
+            </button>
+          `;
+        }).join('');
+      }
+
+      // Render Games Grid
+      function renderGrid() {
+        const grid = document.getElementById('gamesGrid');
+        const empty = document.getElementById('emptyState');
+        const countBadge = document.getElementById('gameCountBadge');
+
+        const filtered = games.filter(g => {
+          if (currentCategory === 'favorites') {
+            if (!favorites.includes(g.id)) return false;
+          } else if (currentCategory !== 'all') {
+            if (g.category.toLowerCase() !== currentCategory.toLowerCase()) return false;
+          }
+
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            const matchTitle = g.title.toLowerCase().includes(q);
+            const matchCat = g.category.toLowerCase().includes(q);
+            const matchDesc = g.description.toLowerCase().includes(q);
+            const matchTags = g.tags && g.tags.some(t => t.toLowerCase().includes(q));
+            if (!matchTitle && !matchCat && !matchDesc && !matchTags) return false;
+          }
+          return true;
+        }).sort((a, b) => {
+          if (sortBy === 'az') return a.title.localeCompare(b.title);
+          if (sortBy === 'category') return a.category.localeCompare(b.category);
+          return 0;
+        });
+
+        countBadge.innerText = `${filtered.length} ${filtered.length === 1 ? 'game' : 'games'}`;
+
+        if (filtered.length === 0) {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        empty.classList.add('hidden');
+        grid.innerHTML = filtered.map(game => {
+          const isFav = favorites.includes(game.id);
+          const controlText = game.controls && game.controls[0] ? game.controls[0] : 'Click or keyboard';
+          return `
+            <div onclick="playGame('${game.id}')" class="group relative bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-xl p-5 flex flex-col justify-between transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:shadow-cyan-950/20">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full inline-block shrink-0" style="background-color: ${game.accentColor || '#38bdf8'}"></span>
+                    <span class="font-medium text-slate-300">${game.category}</span>
+                    <span class="text-slate-600">·</span>
+                    <span>${game.aspectRatio || 'Responsive'}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    ${game.isCustom ? `
+                      <button onclick="deleteCustomGame('${game.id}', event)" title="Remove custom game" class="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    ` : ''}
+                    <button onclick="toggleFavorite('${game.id}', event)" title="Favorite" class="p-1 rounded transition-colors ${isFav ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}">
+                      <i data-lucide="star" class="w-4 h-4 ${isFav ? 'fill-current' : ''}"></i>
+                    </button>
+                  </div>
+                </div>
+                <h3 class="text-base font-semibold text-white group-hover:text-cyan-400 transition-colors">${game.title}</h3>
+                <p class="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">${game.description}</p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500 truncate max-w-[180px]">${controlText}</span>
+                <span class="flex items-center gap-1 font-medium text-cyan-400 group-hover:translate-x-0.5 transition-transform">
+                  <span>Play</span>
+                  <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderPlayer() {
+        if (!activeGame) {
+          document.getElementById('playerView').classList.add('hidden');
+          document.getElementById('libraryView').classList.remove('hidden');
+          return;
+        }
+
+        document.getElementById('libraryView').classList.add('hidden');
+        document.getElementById('playerView').classList.remove('hidden');
+
+        document.getElementById('playerGameTitle').innerText = activeGame.title;
+        document.getElementById('playerGameCategory').innerText = `· ${activeGame.category}`;
+        document.getElementById('aboutGameTitle').innerText = `About ${activeGame.title}`;
+        document.getElementById('aboutGameDesc').innerText = activeGame.description;
+
+        const isFav = favorites.includes(activeGame.id);
+        const favBtn = document.getElementById('playerFavBtn');
+        favBtn.className = `p-2 rounded-lg text-xs transition-colors ${isFav ? 'text-amber-400 bg-amber-400/10' : 'text-slate-400 hover:text-slate-200 bg-slate-800/80'}`;
+        favBtn.innerHTML = `<i data-lucide="star" class="w-4 h-4 ${isFav ? 'fill-current' : ''}"></i>`;
+
+        const wrapper = document.getElementById('iframeWrapper');
+        if (isTheater) {
+          wrapper.className = "w-full h-[85vh] relative flex items-center justify-center bg-slate-950";
+        } else {
+          switch (activeGame.aspectRatio) {
+            case '16:9': wrapper.className = 'w-full max-w-4xl aspect-video relative flex items-center justify-center bg-slate-950'; break;
+            case '4:3': wrapper.className = 'w-full max-w-3xl aspect-[4/3] relative flex items-center justify-center bg-slate-950'; break;
+            case '1:1': wrapper.className = 'w-full max-w-xl aspect-square relative flex items-center justify-center bg-slate-950'; break;
+            default: wrapper.className = 'w-full max-w-4xl h-[620px] relative flex items-center justify-center bg-slate-950';
+          }
+        }
+
+        const iframe = document.getElementById('gameIframe');
+        iframe.src = resolveUrl(activeGame.iframeUrl);
+
+        // Controls
+        const controlsDiv = document.getElementById('aboutGameControls');
+        if (activeGame.controls && activeGame.controls.length > 0) {
+          controlsDiv.innerHTML = activeGame.controls.map(c => `
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span>${c}</span>
+            </div>
+          `).join('');
+        } else {
+          controlsDiv.innerHTML = '<span class="text-slate-500">Standard mouse and keyboard controls.</span>';
+        }
+
+        // Quick Launch
+        const quickLaunch = document.getElementById('quickLaunchList');
+        const otherGames = games.filter(g => g.id !== activeGame.id).slice(0, 6);
+        quickLaunch.innerHTML = otherGames.map(og => `
+          <button onclick="playGame('${og.id}')" class="w-full text-left px-3 py-2 text-xs rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between transition-colors">
+            <span class="font-medium truncate">${og.title}</span>
+            <span class="text-[10px] text-slate-500 shrink-0">${og.category}</span>
+          </button>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function render() {
+        renderNav();
+        renderGrid();
+        renderPlayer();
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // Action Handlers
+      window.setCategory = function(cat) {
+        currentCategory = cat;
+        activeGame = null;
+        render();
+      };
+
+      window.playGame = function(id) {
+        const found = games.find(g => g.id === id);
+        if (found) {
+          activeGame = found;
+          renderPlayer();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      window.toggleFavorite = function(id, e) {
+        if (e) e.stopPropagation();
+        if (favorites.includes(id)) {
+          favorites = favorites.filter(item => item !== id);
+        } else {
+          favorites.push(id);
+        }
+        saveFavorites();
+        render();
+      };
+
+      window.deleteCustomGame = function(id, e) {
+        if (e) e.stopPropagation();
+        games = games.filter(g => g.id !== id);
+        saveCatalog();
+        if (activeGame && activeGame.id === id) activeGame = null;
+        render();
+      };
+
+      // Panic Cloak
+      function toggleCloak() {
+        isCloaked = !isCloaked;
+        const el = document.getElementById('panicCloak');
+        if (isCloaked) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // Event Listeners
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') toggleCloak();
+      });
+      document.getElementById('cloakBtn').addEventListener('click', toggleCloak);
+      document.getElementById('footerPanicBtn').addEventListener('click', toggleCloak);
+      document.getElementById('exitCloakBtn').addEventListener('click', toggleCloak);
+
+      document.getElementById('brandLogo').addEventListener('click', () => {
+        currentCategory = 'all';
+        activeGame = null;
+        render();
+      });
+
+      document.getElementById('backToCatalogBtn').addEventListener('click', () => {
+        activeGame = null;
+        render();
+      });
+
+      document.getElementById('playerReloadBtn').addEventListener('click', () => {
+        if (activeGame) {
+          document.getElementById('gameIframe').src = resolveUrl(activeGame.iframeUrl);
+        }
+      });
+
+      document.getElementById('playerExternalBtn').addEventListener('click', () => {
+        if (activeGame) {
+          window.open(resolveUrl(activeGame.iframeUrl), '_blank', 'noopener,noreferrer');
+        }
+      });
+
+      document.getElementById('playerTheaterBtn').addEventListener('click', () => {
+        isTheater = !isTheater;
+        renderPlayer();
+      });
+
+      document.getElementById('playerFavBtn').addEventListener('click', () => {
+        if (activeGame) toggleFavorite(activeGame.id);
+      });
+
+      document.getElementById('playerFullscreenBtn').addEventListener('click', async () => {
+        const container = document.getElementById('playerContainer');
+        try {
+          if (!document.fullscreenElement) {
+            await container.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (err) {
+          console.warn('Fullscreen failed:', err);
+        }
+      });
+
+      document.getElementById('randomPlayBtn').addEventListener('click', () => {
+        if (games.length > 0) {
+          const rand = games[Math.floor(Math.random() * games.length)];
+          playGame(rand.id);
+        }
+      });
+
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderGrid();
+      });
+
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        renderGrid();
+      });
+
+      // Add Game Modal
+      const addModal = document.getElementById('addGameModal');
+      function openAddModal() { addModal.classList.remove('hidden'); }
+      function closeAddModal() { addModal.classList.add('hidden'); }
+
+      document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
+      document.getElementById('heroAddBtn').addEventListener('click', openAddModal);
+      document.getElementById('closeAddModalBtn').addEventListener('click', closeAddModal);
+      document.getElementById('cancelAddBtn').addEventListener('click', closeAddModal);
+
+      document.getElementById('addGameForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const rawUrl = document.getElementById('addUrl').value.trim();
+        let finalUrl = rawUrl;
+        if (rawUrl.startsWith('<iframe')) {
+          const match = rawUrl.match(/src=["'](.*?)["']/);
+          if (match && match[1]) finalUrl = match[1];
+        }
+
+        const newGame = {
+          id: 'custom-' + Date.now(),
+          title: document.getElementById('addTitle').value.trim(),
+          category: document.getElementById('addCategory').value,
+          description: document.getElementById('addDesc').value.trim() || 'Custom added iframe game.',
+          iframeUrl: finalUrl,
+          aspectRatio: document.getElementById('addAspect').value,
+          controls: ['Mouse / Keyboard'],
+          accentColor: '#38bdf8',
+          isCustom: true
+        };
+
+        games.unshift(newGame);
+        saveCatalog();
+        closeAddModal();
+        playGame(newGame.id);
+      });
+
+      // JSON Modal
+      const jsonModal = document.getElementById('jsonModal');
+      const jsonEditor = document.getElementById('jsonEditor');
+      const jsonStatus = document.getElementById('jsonStatus');
+
+      function openJsonModal() {
+        jsonEditor.value = JSON.stringify(games, null, 2);
+        jsonStatus.classList.add('hidden');
+        jsonModal.classList.remove('hidden');
+      }
+      function closeJsonModal() { jsonModal.classList.add('hidden'); }
+
+      document.getElementById('openJsonBtn').addEventListener('click', openJsonModal);
+      document.getElementById('footerExportJsonBtn').addEventListener('click', openJsonModal);
+      document.getElementById('closeJsonModalBtn').addEventListener('click', closeJsonModal);
+      document.getElementById('closeJsonFooterBtn').addEventListener('click', closeJsonModal);
+
+      document.getElementById('copyJsonBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(jsonEditor.value);
+        jsonStatus.innerText = 'Copied games.json to clipboard!';
+        jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+        jsonStatus.classList.remove('hidden');
+      });
+
+      document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+        const blob = new Blob([jsonEditor.value], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'games.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('resetJsonBtn').addEventListener('click', () => {
+        games = DEFAULT_GAMES;
+        saveCatalog();
+        jsonEditor.value = JSON.stringify(games, null, 2);
+        jsonStatus.innerText = 'Reset to default games catalog.';
+        jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+        jsonStatus.classList.remove('hidden');
+        render();
+      });
+
+      document.getElementById('applyJsonBtn').addEventListener('click', () => {
+        try {
+          const parsed = JSON.parse(jsonEditor.value);
+          if (!Array.isArray(parsed)) throw new Error('Root must be an array of game objects.');
+          games = parsed;
+          saveCatalog();
+          jsonStatus.innerText = 'Catalog updated successfully!';
+          jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+          jsonStatus.classList.remove('hidden');
+          render();
+        } catch (err) {
+          jsonStatus.innerText = err.message || 'Invalid JSON syntax.';
+          jsonStatus.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center gap-2 bg-rose-500/10 text-rose-400 border border-rose-500/30';
+          jsonStatus.classList.remove('hidden');
+        }
+      });
+
+      // Kick off
+      initData();
+    </script>
   </body>
 </html>
-
